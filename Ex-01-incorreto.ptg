@@ -1,0 +1,10 @@
+(* Ex-00-incorreto.ptg *)
+
+inicio
+  int: @número, r;
+  imprima ("Digite um nro:");
+  leia (numero);
+  r <- raiz (número);
+  imprima(r);
+fim
+

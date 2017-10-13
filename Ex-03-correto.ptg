@@ -1,0 +1,11 @@
+inicio
+   dec : x , y ;
+   dec:z,media;
+   imprima ( "Digite 3 nros:" );
+   leia ( x ) ;
+   leia (y) ;
+   leia(z);
+   media<-(x+y+z)/3;      /* Calcula e
+   imprima ("Media = ");  /* mostra o
+   imprima(media);        /* resultado
+fim
