@@ -51,13 +51,21 @@ typedef enum {
 	ERRO
 } tToken;
 
-
+char * NOMES[] = {"tk_EOF","tk_IDEN","tk_INTEIRO","tk_DECIMAL","tk_CADEIA","tk_inicio","tk_fim","tk_int","tk_dec","tk_leia","tk_imprima","tk_para","tk_de","tk_ate",
+"tk_passo","tk_fim_para","tk_se","tk_entao","tk_senao","tk_fim_se","tk_e","tk_ou","tk_nao","tk_virg","tk_pt_virg","tk_dois_pts","tk_abre_par","tk_fecha_par",
+"tk_menor","tk_menor_igual","tk_maior","tk_maior_igual","tk_diferente","tk_igual","tk_incr","tk_decr","tk_atrib","tk_mais","tk_menos","tk_vezes","tk_dividido","ERRO"};
 FILE *Arquivo;
 int linha = 0, coluna = 0, tamanho_lexema=0, id_token;
 char lexema[TAMANHO_MAX];
 int token[QUANTIDADE_DE_TOKENS] = {0};
 char c;
 int estado = 0; 
+int Bool = 1;
+
+void printa_Resultado(void){
+	for (int i=0; i<QUANTIDADE_DE_TOKENS; i++)
+		printf("%s => %d\n", NOMES[i], token[i]);
+}
 
 
 void zera_Lexema_E_Estado(){
@@ -141,13 +149,17 @@ tToken palavra_reservada(){
 }
 
 
-void automato (void){	
+void automato (void){
+	//printf("Estado: %d\n", estado);
+	//printf("Lexema: %s\n", lexema);
+	//char d = getchar();
 	switch (estado){
 		case 0: ///Estado Inicial
 			c = leia_Proximo_Caractere();
+			
             while (isspace(c))
             	c = leia_Proximo_Caractere(); 	
-			
+			//printf("caracter: %c\n", c);
 			if(isalpha(c))
 				estado = 1;
 			else if(isdigit(c))
@@ -223,7 +235,6 @@ void automato (void){
 			if (isspace(c)) //Se branco, fim do inteiro: muda pro estado 5
 				estado = 5;
 			else if(c == '.'){ // se '.' estado 6
-				insere_Caractere_No_Lexema(c);
 				estado = 6;
 			} else //Se caractere invalido muda pro estado -2
 				estado = -2;
@@ -238,10 +249,11 @@ void automato (void){
 
 
 		case 6: /// Estado Digito Decimal (após o ponto)
-			while(isdigit(c)){
+			do {
 				insere_Caractere_No_Lexema(c);
 				c = leia_Proximo_Caractere();
-			}
+			} while(isdigit(c));
+			
 			if (isspace(c)) //Se branco, fim do decimal: muda pro estado 7
 				estado = 7;
 			else //Se caractere invalido muda pro estado -3
@@ -279,6 +291,7 @@ void automato (void){
 		case 10: ///Estado End of File (FINAL)
 			token[tk_EOF]++;
 			zera_Lexema_E_Estado();
+			Bool = 0;
 			break;
 
 		case 11: ///Estado Virgula (FINAL)
@@ -424,17 +437,29 @@ void automato (void){
 			zera_Lexema_E_Estado();
 			break;
 			
-		case 35:
-			//Ignora tudo ate um *, quando achar eatdo 36
-			//se EOF erro -5
+		case 35: ///Comentario
+			while (c != '*' && c != EOF)
+				c = leia_Proximo_Caractere();
+			if (c == '*') //Pode ser um fim de comentario
+				estado = 36;
+			else //Fim de arquivo
+				estado = -5;
 			break;
 			
-		case 36:
-			//ler proxim  char, se * continua, se ) fim do comenttario estado 37, se eof erro -5, outros estado 35
+		case 36: ///Possivel fim de comentario
+			while (c == '*') //ler proximo char, se * continua
+				c = leia_Proximo_Caractere();
+			if (c == ')') //Fim do comentario
+				estado = 37;
+			else if (c == EOF) //Fim de arquivo
+				estado = -5;
+			else //Não é fim de comentario
+				estado = 35;
 			break;
 			
-		case 37:
-			//Fim do comentario, eatao = 0 e nao faz nada
+		case 37: ///Fim do comentario (FINAL)
+			//printf("Fim comentario\n");
+			zera_Lexema_E_Estado();
 			break;
 			
 		case 38: ///Estado Abre Parenteses (FINAL)
@@ -463,13 +488,17 @@ void automato (void){
 			break;
 
 		case -4:
-			// Identifica Erro lexico(nao fechameno da adeia)
+			// Identifica Erro lexico(nao fechameno da cadeia)
 			// estado 9
 			break;
 		
 		case -5:
 			// Identifica Erro lexico(nao fechameno do comentario)
 			// Volta pro inicio e ignora ate o primeiro /n (estado 33)
+			
+			//Um comentário de bloco não fechado deve gerar o erro léxico “Comentário de bloco não fechado”. A análise
+			//deve ser retomada no início da linha seguinte àquela onde o comentário foi aberto, efetivamente transfor-
+			//mando-o em um comentário de linha válido, apesar de truncado.
 			break;
 
 		default:
@@ -492,13 +521,13 @@ int main (int argc, char *argv[]){
 		exit(1);
 	}
 	
-	while(!feof(Arquivo)){
+	while(Bool){
 		//processa os elementos do arquivo
 		automato();
 	}
 	
 	fclose(Arquivo);
-	
+	printa_Resultado();
 	return 0;
 }
 
