@@ -7,4 +7,3 @@ inicio
   r <- raiz (número);
   imprima(r);
 fim
-
