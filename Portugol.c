@@ -10,7 +10,7 @@
 //#include RESULTADOS.H
 
 
-#define TAMANHO_INICIAL 100
+#define TAMANHO_INICIAL 500
 #define QUANTIDADE_DE_TOKENS 41
 
 
@@ -67,12 +67,18 @@ typedef struct{
 	char LEXEMA[TAMANHO_INICIAL], TOKEN[TAMANHO_INICIAL];
 } tToken_resultante;
 
+typedef struct{
+	int LIN, COL;
+	char ERRO[TAMANHO_INICIAL];
+} tErro;
 
 FILE *arquivo_de_entrada;
-int linha = 1, coluna = 0, tamanho_lexema = 0, estado = 0, total_de_erros = 0;//, inicio_do_comentario;
+int linha = 1, coluna = 0, tamanho_lexema = 0, estado = 0, contador_de_bloco = 0;
 Bool FINAL_DO_ARQUIVO = False;
 char lexema[TAMANHO_INICIAL], prox_Simb;
 int resumo[QUANTIDADE_DE_TOKENS] = {0};
+tErro erro_da_vez[TAMANHO_INICIAL]; 
+int qtd_erros = 0;
 
 
 
@@ -187,8 +193,7 @@ const char * obter_Nome_Do_Token(tToken id_token){
 }
 
 
-void setar_Token (tToken_resultante* token_da_vez, const int id_token, const char* Lexema, Bool* continua, int LIN, int COL){
-	*continua = False;
+void setar_Token (tToken_resultante* token_da_vez, const int id_token, const char* Lexema, Bool* continua, const int LIN, const int COL){
 	strcpy(token_da_vez->TOKEN, obter_Nome_Do_Token(id_token));
 	strcpy(token_da_vez->LEXEMA, Lexema);
 	token_da_vez->LIN = LIN;
@@ -196,17 +201,47 @@ void setar_Token (tToken_resultante* token_da_vez, const int id_token, const cha
 	token_da_vez->COD = id_token + 1;
 	
 	resumo[id_token]++;
+	*continua = False;
 }
 
 
 
 
 
+///ERROS.H
+void setar_Erro(const char* tipo_de_erro){//tErro * erro_da_vez, const char prox_Simb
+	erro_da_vez[qtd_erros].LIN = linha;
+	erro_da_vez[qtd_erros].COL = coluna;
+	strcpy(erro_da_vez[qtd_erros].ERRO, tipo_de_erro);
+	qtd_erros++;
+}
+
+
+
+
+
+///TAB_SIMBOLOS.H
+/// ???
+
+
+
+
+
 ///AUTOMATO.H
-void recuar(int n){
+void retrocede_Caracteres(int n){
+	fseek(arquivo_de_entrada, (-1)*n*sizeof(char), SEEK_CUR);
+	coluna --; 
+	if (prox_Simb == '\n')
+		linha--; //Isso nao influencia na coluna, uma vez que o prox a ser lido será '\n, o valor da coluna é zerado
+}
+
+
+void recuar(int n, int LIN, int COL){
 	// Volta o numero de caracters pedidos
-	fseek(arquivo_de_entrada, n*(-1), SEEK_CUR);
-	coluna -= n; 
+	fseek(arquivo_de_entrada, (-1)*n*sizeof(char), SEEK_CUR);
+	coluna = COL;
+	linha = LIN;
+	prox_Simb = ' ';
 }
 
 
@@ -214,12 +249,13 @@ void reiniciar_Automato(){
 	estado = 0;
 	tamanho_lexema = 0;
 	lexema[tamanho_lexema] = '\0';
+	contador_de_bloco = 0;
 }
 
 
 char ler_Proximo_Caractere(){
 	char prox_Simb = getc(arquivo_de_entrada);
-	if (prox_Simb != EOF)
+	if (prox_Simb != EOF) //EOF não conta como coluna
 		coluna++;
 	if(prox_Simb == '\n'){ // Se o caracter for uma quebra de linha: Novos valores para linha e coluna
 		linha++;
@@ -234,20 +270,20 @@ tToken_resultante analizador_Lexico (void){
 	int id_token = -1, LIN, COL;
 	tToken_resultante token_da_vez;
 	
-	//printf("Estado: %d \nLexema: %s\n Caractere: %c\n", estado, lexema, prox_Simb);
+	//printf("\nEstado: %d \nLexema: %s \nCaractere: %c\n", estado, lexema, prox_Simb);
 	//char PAUSE = getchar();
 	
 	reiniciar_Automato();
 	while (continua){
 		switch (estado){
 			case 0: ///Estado Inicial
-				do{
-					prox_Simb = ler_Proximo_Caractere();
-				} while (isspace(prox_Simb)); 	
-				
+				if (prox_Simb != EOF){
+					do{
+						prox_Simb = ler_Proximo_Caractere();
+					} while (isspace(prox_Simb));
+				}
 				LIN = linha;
 				COL = coluna;
-				
 				if(isalpha(prox_Simb))
 					estado = 1;
 				else if(isdigit(prox_Simb))
@@ -291,10 +327,7 @@ tToken_resultante analizador_Lexico (void){
 				   inserir_Caractere_No_Lexema(prox_Simb);
 				   prox_Simb = ler_Proximo_Caractere();
 				}
-				if (isspace(prox_Simb)) //Se branco: fim da palavra, muda pro estado 2
-					estado = 2;
-				else //Se caractere invalido: muda pro estado -1
-					estado = -1;
+				estado = 2;
 				break;
 			
 			case 2: /// Estado de verificacao
@@ -303,6 +336,7 @@ tToken_resultante analizador_Lexico (void){
 					estado = 3;
 				else //Palavra reservada
 					estado = 39;
+				retrocede_Caracteres(1);
 				break;
 
 			case 3: ///Estado identificador (FINAL)
@@ -317,8 +351,8 @@ tToken_resultante analizador_Lexico (void){
 				}
 				if (isspace(prox_Simb)) //Se branco: fim do inteiro, muda pro estado 5
 					estado = 5;
-				else if(prox_Simb == '.'){ //Se '.': numero decimal, muda pro estado 6
-					estado = 6;
+				else if(prox_Simb == '.'){ //Se '.': numero decimal, muda pro estado 40
+					estado = 40;
 				} else //Senao: caractere invalido, muda pro estado -2
 					estado = -2;
 				break;
@@ -328,16 +362,13 @@ tToken_resultante analizador_Lexico (void){
 				//Adicionar inteiro na tabela de simbolos (FAZER)
 				break;
 
-			case 6: /// Estado Digito Decimal (após o ponto)
-				do {
-					inserir_Caractere_No_Lexema(prox_Simb);
-					prox_Simb = ler_Proximo_Caractere();
-				} while(isdigit(prox_Simb));
-				
-				if (isspace(prox_Simb)) //Se branco: fim do decimal, muda pro estado 7
-					estado = 7;
-				else //Senao: caractere invalido, muda pro estado -3
-					estado = -3;
+			case 6: /// Estado Digito Decimal Iniciando com ponto
+				inserir_Caractere_No_Lexema(prox_Simb);
+				prox_Simb = ler_Proximo_Caractere();
+				if (isdigit(prox_Simb)) //Se digito: Decimal valido, muda pro estado 40
+					estado = 40;
+				else //Senao: caractere invalido, muda pro estado -6
+					estado = -6;
 				break;
 				
 			case 7: /// Estado Digito Decimal (FINAL)
@@ -418,6 +449,7 @@ tToken_resultante analizador_Lexico (void){
 
 			case 20: ///Estado Menor (FINAL)
 				setar_Token (&token_da_vez, tk_menor, "", &continua, LIN, COL);
+				retrocede_Caracteres(1);
 				break;
 
 			case 21: ///Estado Igual (FINAL)
@@ -438,7 +470,7 @@ tToken_resultante analizador_Lexico (void){
 
 			case 24: ///Estado Maior (FINAL)
 				setar_Token (&token_da_vez, tk_maior, "", &continua, LIN, COL);
-				recuar(1);
+				retrocede_Caracteres(1);
 				break;
 
 			case 25: ///Estado +
@@ -455,7 +487,7 @@ tToken_resultante analizador_Lexico (void){
 
 			case 27: ///Estado Mais (FINAL)
 				setar_Token (&token_da_vez, tk_incr, "", &continua, LIN, COL);
-				recuar(1);
+				retrocede_Caracteres(1);
 				break;
 
 			case 28: ///Estado -
@@ -472,7 +504,7 @@ tToken_resultante analizador_Lexico (void){
 
 			case 30: ///Estado Menos (FINAL)
 				setar_Token (&token_da_vez, tk_menos, "", &continua, LIN, COL);
-				recuar(1);
+				retrocede_Caracteres(1);
 				break;
 
 			case 31: ///Estado Vezes (FINAL)
@@ -496,12 +528,14 @@ tToken_resultante analizador_Lexico (void){
 
 			case 34: ///Estado Dividido (FINAL)
 				setar_Token (&token_da_vez, tk_dividido, "", &continua, LIN, COL);
-				recuar(1);
+				retrocede_Caracteres(1);
 				break;
 
 			case 35: ///Comentario de bloco
-				while (prox_Simb != '*' && prox_Simb != EOF)
+				while (prox_Simb != '*' && prox_Simb != EOF){
+					contador_de_bloco++;
 					prox_Simb = ler_Proximo_Caractere();
+				}
 				if (prox_Simb == '*') //Pode ser um fim de comentario
 					estado = 36;
 				else //Fim de arquivo
@@ -509,8 +543,10 @@ tToken_resultante analizador_Lexico (void){
 				break;
 
 			case 36: ///Possivel fim de comentario de bloco
-				while (prox_Simb == '*') //Ler proximo char, se * continua
+				while (prox_Simb == '*'){ //Ler proximo char, se * continua
+					contador_de_bloco++;
 					prox_Simb = ler_Proximo_Caractere();
+				}
 				if (prox_Simb == ')') //Fim do comentario
 					estado = 37;
 				else if (prox_Simb == EOF) //Fim de arquivo
@@ -526,54 +562,58 @@ tToken_resultante analizador_Lexico (void){
 
 			case 38: ///Estado Abre Parenteses (FINAL)
 				setar_Token (&token_da_vez, tk_abre_par, "", &continua, LIN, COL);
-				recuar(1);
+				retrocede_Caracteres(1);
 				break;
 
 			case 39: ///Palavra reservada token++ (FINAL)
 				setar_Token (&token_da_vez, id_token, "", &continua, LIN, COL);
 				break;
 
-			case -1:
-				// Identifica Erro lexico(pode ou nao ser erro)
-				estado = 2;
-				if (prox_Simb != EOF)
-					recuar(1);
+			case 40: ///Estado Digito Decimal Iniciando com digito
+				do {
+				   inserir_Caractere_No_Lexema(prox_Simb);
+				   prox_Simb = ler_Proximo_Caractere();
+				} while(isdigit(prox_Simb));
+				if (isspace(prox_Simb)) //Se branco: fim do decimal, muda pro estado 7
+					estado = 7;
+				else //Senao: caractere invalido, muda pro estado -3
+					estado = -3;
 				break;
 
-			case -2:
-				// Identifica Erro lexico (pode ou nao ser erro)
+			case -2: ///Estado de erro lexico apos inteiro
+				if (isalpha(prox_Simb))
+					setar_Erro("Delimitador esperado");
 				estado = 5;
-				if (prox_Simb != EOF)
-					recuar(1);
+				retrocede_Caracteres(1);
 				break;
 
-			case -3:
-				// Identifica Erro lexico (pode ou nao ser erro)
+			case -3: ///Estado de erro lexico apos decimal
+				if (isalpha(prox_Simb))
+					setar_Erro("Delimitador esperado");
 				estado = 7;
-				if (prox_Simb != EOF)
-					recuar(1);
+				retrocede_Caracteres(1);
 				break;
 
-			case -4:
-				// Identifica Erro lexico(nao fechameno da cadeia)
+			case -4: ///Estado de erro lexico nao fechameno da cadeia
+				setar_Erro("Cadeia nao fechada");
 				estado = 9;
-				if (prox_Simb != EOF)
-					recuar(1);
+				retrocede_Caracteres(1);
 				break;
 
-			case -5:
-				// Identifica Erro lexico(nao fechameno do comentario)
-				// Volta pro inicio e ignora ate o primeiro /n (estado 33)
-				
-				//Um comentário de bloco não fechado deve gerar o erro léxico “Comentário de bloco não fechado”. A análise
-				//deve ser retomada no início da linha seguinte àquela onde o comentário foi aberto, efetivamente transfor-
-				//mando-o em um comentário de linha válido, apesar de truncado.
-				///recuar(n);
+			case -5: ///Estado de erro lexico Comentario de bloco não fechado
+				recuar(contador_de_bloco, LIN, COL);
+				setar_Erro("Comentario de bloco não fechado");
+				estado = 33; // Volta pro inicio e ignora ate o primeiro /n ou EOF
+				break;
+			
+			case -6: ///Estado de erro lexico Ponto Isolado (FINAL)
+				setar_Erro("Ponto isolado");
+				reiniciar_Automato();
+				retrocede_Caracteres(1);
 				break;
 
-			default:
-				//Apresnta erro e ignora o caractere....
-				total_de_erros++;
+			default: ///Estado Defauult: Apresnta erro e ignora o caractere (FINAL)
+				setar_Erro("Caracter invalido");
 				reiniciar_Automato();
 				break;
 		}
@@ -586,31 +626,28 @@ tToken_resultante analizador_Lexico (void){
 
 
 
-///ERROS.H
-void setar_Erro(){
-	//De acordo com a secao 3.4
+///RESULTADOS.H
+int imprimir_Linha(void){
+	int carcteres_na_linha = 0;
+	prox_Simb = ' ';
+	while (prox_Simb != '\n' && prox_Simb != EOF){
+		printf("%c", prox_Simb);
+		prox_Simb = ler_Proximo_Caractere();
+		carcteres_na_linha++;
+	}
+	printf("\n");
+	return carcteres_na_linha;
 }
 
 
-/// Ponto de vista lexico(FAZER)
-// "Ponto isolado";
-// "Cadeia nao fechada";
-// "Comentario de bloco não fechado";
-// "Caracter invalido";
-// "Delimitador esperado";
+void imprimir_seta(int n){
+	printf("       ");
+	for (int i=0; i<n-1; i++)
+		printf("-");
+	printf("^\n");
+}
 
 
-
-
-
-///TAB_SIMBOLOS.H
-/// ???
-
-
-
-
-
-///RESULTADOS.H
 void printar_Resumo(void){
 	//Procurar tamanho max (FAZER)
 	int tot = 0;
@@ -625,11 +662,11 @@ void printar_Resumo(void){
 	printf("+-----+----------------+------+\n");
 	printf("|   0 | TOTAL          | %4d |\n", tot);
 	printf("+-----+----------------+------+\n\n");
-	printf("TOTAL DE ERROS: %d\n\n", total_de_erros);
+	printf("TOTAL DE ERROS: %d\n\n", qtd_erros);
 }
 
 
-void printar_Lista_De_Tokens_Reconhecidos(const char* nomeArquivo, const tToken_resultante * token_da_vez, int n){
+void printar_Lista_De_Tokens_Reconhecidos(const char* nomeArquivo, const tToken_resultante * token_da_vez, const int n){
 	//Procurar tamanho max (FAZER)
 	//ERRO nas distancias (FAZER)
 	int linha_Da_Vez = 0;
@@ -662,11 +699,31 @@ void printar_Tabela_De_Simbolos(const char* nomeArquivo){
 
 
 void printar_Lista_De_Erros_Lexicos(const char* nomeArquivo){
+	//Voltar ao inico do arquivo
+	rewind(arquivo_de_entrada);
+	//Zerar linha e coluna
+	linha  = 1;
+	coluna = 0;
+	//Variaveis
+	int carcteres_na_linha = -1, i = 0;
+	
 	printf("LISTA DE ERROS LEXICOS EM \"%s\" \n\n", nomeArquivo);
+	while(!feof(arquivo_de_entrada)){
+		printf("[%4d]", linha);
+		carcteres_na_linha = imprimir_Linha();
+		while (erro_da_vez[i].LIN == linha-1) {
+			imprimir_seta(erro_da_vez[i].COL);
+			printf("       Erro lexico na linha %d coluna %d: %s\n", erro_da_vez[i].LIN, erro_da_vez[i].COL, erro_da_vez[i].ERRO);
+			i++;
+			if (erro_da_vez[i].LIN == linha-1){	
+				retrocede_Caracteres(carcteres_na_linha);
+				printf("[%4d]", linha);
+				carcteres_na_linha = imprimir_Linha();
+			}
+		}
+	}
 	
-	//(FAZER)
-	
-	printf("TOTAL DE ERROS: %d\n\n", total_de_erros);
+	printf("\nTOTAL DE ERROS: %d\n\n", qtd_erros);
 }
 
 
