@@ -388,7 +388,7 @@ tToken_resultante analizador_Lexico (void){
 				retrocede_Caracteres(1);
 				break;
 				
-			case 8: ///Estado Digito Decimal Iniciando com digito
+			case 8: ///Estado Digito Decimal apos o ponto
 				do {
 				   inserir_Caractere_No_Lexema(prox_Simb);
 				   prox_Simb = ler_Proximo_Caractere();
