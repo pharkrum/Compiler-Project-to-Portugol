@@ -302,39 +302,39 @@ tToken_resultante analizador_Lexico (void){
 				if(isalpha(prox_Simb))
 					estado = 1;
 				else if(isdigit(prox_Simb))
-					estado = 4;
+					estado = 5;
 				else if (prox_Simb == '.')
-					estado = 6;
-				else if (prox_Simb == '\"')
-					estado = 8;
-				else if (prox_Simb == EOF)
-					estado = 10;
-				else if (prox_Simb == ',')
 					estado = 11;
-				else if (prox_Simb == ';')
-					estado = 12;
-				else if (prox_Simb == ':')
+				else if (prox_Simb == '\"')
 					estado = 13;
-				else if (prox_Simb == '(')
-					estado = 14;
-				else if (prox_Simb == ')')
-					estado = 15;
-				else if (prox_Simb == '<')
+				else if (prox_Simb == EOF)
 					estado = 16;
+				else if (prox_Simb == ',')
+					estado = 17;
+				else if (prox_Simb == ';')
+					estado = 18;
+				else if (prox_Simb == ':')
+					estado = 19;
+				else if (prox_Simb == '(')
+					estado = 20;
+				else if (prox_Simb == ')')
+					estado = 26;
+				else if (prox_Simb == '<')
+					estado = 27;
 				else if (prox_Simb == '=')
-					estado = 21;
-				else if (prox_Simb == '>')
-					estado = 22;
-				else if (prox_Simb == '+')
-					estado = 25;
-				else if (prox_Simb == '-')
-					estado = 28;
-				else if (prox_Simb == '*')
-					estado = 31;
-				else if (prox_Simb == '/')
 					estado = 32;
+				else if (prox_Simb == '>')
+					estado = 33;
+				else if (prox_Simb == '+')
+					estado = 36;
+				else if (prox_Simb == '-')
+					estado = 39;
+				else if (prox_Simb == '*')
+					estado = 42;
+				else if (prox_Simb == '/')
+					estado = 43;
 				else 
-					estado = -8000; //Outros: Apresenta o erro e ignora o caractere...
+					estado = -1; //Outros: Apresenta o erro e ignora o caractere...
 				break;
 			
 			case 1: ///Estado identificador ou palavra reservada
@@ -348,281 +348,281 @@ tToken_resultante analizador_Lexico (void){
 			case 2: /// Estado de verificacao
 				id_token = identificar_Token();
 				if (id_token == -1) //Identificador
-					estado = 3;
+					estado = 4;
 				else //Palavra reservada
-					estado = 39;
+					estado = 3;
 				retrocede_Caracteres(1);
 				break;
-
-			case 3: ///Estado identificador (FINAL)
+				
+			case 3: ///Palavra reservada token++ (FINAL)
+				setar_Token (&token_da_vez, id_token, "", &continua, LIN, COL);
+				break;
+				
+			case 4: ///Estado identificador (FINAL)
 				setar_Token (&token_da_vez, tk_IDEN, lexema, &continua, LIN, COL);
 				//Adiconar identificador na tabela de simbolos (FAZER)
 				break;
 
-			case 4: /// Estado Digito (inteiro ou decimal)
+			case 5: /// Estado Digito (inteiro ou decimal)
 				while(isdigit(prox_Simb)){
 				   inserir_Caractere_No_Lexema(prox_Simb);
 				   prox_Simb = ler_Proximo_Caractere();
 				}
-				if (isspace(prox_Simb)) //Se branco: fim do inteiro, muda pro estado 5
-					estado = 5;
-				else if(prox_Simb == '.'){ //Se '.': numero decimal, muda pro estado 40
-					estado = 40;
-				} else //Senao: caractere invalido, muda pro estado -2
-					estado = -2;
+				if (isspace(prox_Simb)) //Se branco: fim do inteiro, muda pro estado 6
+					estado = 6;
+				else if(prox_Simb == '.'){ //Se '.': numero decimal, muda pro estado 8
+					estado = 8;
+				} else //Senao: caractere invalido, muda pro estado 7
+					estado = 7;
 				break;
 
-			case 5: /// Estado Digito Inteiro (FINAL)
+			case 6: /// Estado Digito Inteiro (FINAL)
 				setar_Token (&token_da_vez, tk_INTEIRO, lexema, &continua, LIN, COL);
 				//Adicionar inteiro na tabela de simbolos (FAZER)
 				break;
-
-			case 6: /// Estado Digito Decimal Iniciando com ponto
-				inserir_Caractere_No_Lexema(prox_Simb);
-				prox_Simb = ler_Proximo_Caractere();
-				if (isdigit(prox_Simb)) //Se digito: Decimal valido, muda pro estado 40
-					estado = 40;
-				else //Senao: caractere invalido, muda pro estado -6
-					estado = -6;
+				
+			case 7: ///Estado de erro lexico apos inteiro
+				if (isalpha(prox_Simb))
+					setar_Erro("Delimitador esperado");
+				estado = 6;
+				retrocede_Caracteres(1);
 				break;
 				
-			case 7: /// Estado Digito Decimal (FINAL)
+			case 8: ///Estado Digito Decimal Iniciando com digito
+				do {
+				   inserir_Caractere_No_Lexema(prox_Simb);
+				   prox_Simb = ler_Proximo_Caractere();
+				} while(isdigit(prox_Simb));
+				if (isspace(prox_Simb)) //Se branco: fim do decimal, muda pro estado 10
+					estado = 9;
+				else //Senao: caractere invalido, muda pro estado 9
+					estado = 10;
+				break;
+				
+			case 9: /// Estado Digito Decimal (FINAL)
 				setar_Token (&token_da_vez, tk_DECIMAL, lexema, &continua, LIN, COL);
 				//Adicionar decimal na tabela de simbolos (FAZER)
 				break;
 
-			case 8: ///Estado Cadeia
+			case 10: ///Estado de erro lexico apos decimal
+				if (isalpha(prox_Simb))
+					setar_Erro("Delimitador esperado");
+				estado = 9;
+				retrocede_Caracteres(1);
+				break;
+								
+			case 11: /// Estado Digito Decimal Iniciando com ponto
 				inserir_Caractere_No_Lexema(prox_Simb);
-				while(estado == 8){
+				prox_Simb = ler_Proximo_Caractere();
+				if (isdigit(prox_Simb)) //Se digito: Decimal valido, muda pro estado 
+					estado = 8;
+				else //Senao: caractere invalido, muda pro estado 
+					estado = 12;
+				break;
+				
+			case 12: ///Estado de erro lexico Ponto Isolado (FINAL)
+				setar_Erro("Ponto isolado");
+				reiniciar_Automato();
+				retrocede_Caracteres(1);
+				break;
+
+			case 13: ///Estado Cadeia
+				inserir_Caractere_No_Lexema(prox_Simb);
+				while(estado == 13){
 					prox_Simb = ler_Proximo_Caractere();
 					if(prox_Simb == '\n' || prox_Simb == EOF){ //Erro na cadeia
-						estado = -4;
+						estado = 15;
 					} else if(prox_Simb == '\"'){ //Fim da Cadeia
-						estado = 9;
+						estado = 14;
 					}
 					inserir_Caractere_No_Lexema(prox_Simb);
 				}
 				break;
 
-			case 9: ///Estado Cadeia (FINAL)
+			case 14: ///Estado Cadeia (FINAL)
 				setar_Token (&token_da_vez, tk_CADEIA, lexema, &continua, LIN, COL);
 				//Adiciona cadeia na tabela de simbolos (FAZER)
 				break;
+			
+			case 15: ///Estado de erro lexico nao fechameno da cadeia
+				setar_Erro("Cadeia nao fechada");
+				estado = 14;
+				retrocede_Caracteres(1);
+				break;
 
-			case 10: ///Estado End of File (FINAL)
+			case 16: ///Estado End of File (FINAL)
 				setar_Token (&token_da_vez, tk_EOF, "", &continua, LIN, COL);
 				break;
 
-			case 11: ///Estado Virgula (FINAL)
+			case 17: ///Estado Virgula (FINAL)
 				setar_Token (&token_da_vez, tk_virg, "", &continua, LIN, COL);
 				break;
 
-			case 12: ///Estado Ponto-e-virgula (FINAL)
+			case 18: ///Estado Ponto-e-virgula (FINAL)
 				setar_Token (&token_da_vez, tk_pt_virg, "", &continua, LIN, COL);
 				break;
 
-			case 13: ///Estado Dois-Pontos (FINAL)
+			case 19: ///Estado Dois-Pontos (FINAL)
 				setar_Token (&token_da_vez, tk_dois_pts, "", &continua, LIN, COL);
 				break;
 
-			case 14: ///Estado Abre Parenteses
+			case 20: ///Estado Abre Parenteses
 				prox_Simb = ler_Proximo_Caractere();
 				if (prox_Simb == '*')
-					estado = 35;
+					estado = 21;
 				else 
-					estado = 38;
+					estado = 22;
+				break;
+				
+			case 21: ///Comentario de bloco
+				while (prox_Simb != '*' && prox_Simb != EOF){
+					contador_de_bloco++;
+					prox_Simb = ler_Proximo_Caractere();
+				}
+				if (prox_Simb == '*') //Pode ser um fim de comentario
+					estado = 23;
+				else //Fim de arquivo
+					estado = 25;
+				break;
+				
+			case 22: ///Estado Abre Parenteses (FINAL)
+				setar_Token (&token_da_vez, tk_abre_par, "", &continua, LIN, COL);
+				retrocede_Caracteres(1);
+				break;
+				
+			case 23: ///Possivel fim de comentario de bloco
+				while (prox_Simb == '*'){ //Ler proximo char, se * continua
+					contador_de_bloco++;
+					prox_Simb = ler_Proximo_Caractere();
+				}
+				if (prox_Simb == ')') //Fim do comentario
+					estado = 24;
+				else if (prox_Simb == EOF) //Fim de arquivo
+					estado = 25;
+				else //Não é fim de comentario
+					estado = 21;
 				break;
 
-			case 15:  ///Estado Fecha Parenteses (FINAL)
+			case 24: ///Fim do comentario de bloco (FINAL)
+				//Comentários devem ser ignorados pelo analisador léxico para efeito de reconhecimento de tokens
+				reiniciar_Automato();
+				break;
+
+			case 25: ///Estado de erro lexico Comentario de bloco não fechado
+				recuar(contador_de_bloco, LIN, COL);
+				setar_Erro("Comentario de bloco não fechado");
+				estado = 44; // Volta pro inicio e ignora ate o primeiro /n ou EOF
+				break;
+			
+			case 26:  ///Estado Fecha Parenteses (FINAL)
 				setar_Token (&token_da_vez, tk_fecha_par, "", &continua, LIN, COL);
 				break;
 
-			case 16: ///Estado <
+			case 27: ///Estado <
 				prox_Simb = ler_Proximo_Caractere();
 				if (prox_Simb == '-') //Atribuicao
-					estado = 17;
+					estado = 28;
 				else if (prox_Simb == '>') //Diferente
-					estado = 18;
+					estado = 29;
 				else if (prox_Simb == '=') //Menor Igual
-					estado = 19;
+					estado = 30;
 				else
-					estado = 20; //Menor
+					estado = 31; //Menor
 				break;
 
-			case 17: ///Estado Atribuicao (FINAL)
+			case 28: ///Estado Atribuicao (FINAL)
 				setar_Token (&token_da_vez, tk_atrib, "", &continua, LIN, COL);
 				break;
 
-			case 18: ///Estado Diferente (FINAL)
+			case 29: ///Estado Diferente (FINAL)
 				setar_Token (&token_da_vez, tk_diferente, "", &continua, LIN, COL);
 				break;
 
-			case 19: ///Estado Menor Igual (FINAL)
+			case 30: ///Estado Menor Igual (FINAL)
 				setar_Token (&token_da_vez, tk_menor_igual, "", &continua, LIN, COL);
 				break;
 
-			case 20: ///Estado Menor (FINAL)
+			case 31: ///Estado Menor (FINAL)
 				setar_Token (&token_da_vez, tk_menor, "", &continua, LIN, COL);
 				retrocede_Caracteres(1);
 				break;
 
-			case 21: ///Estado Igual (FINAL)
+			case 32: ///Estado Igual (FINAL)
 				setar_Token (&token_da_vez, tk_igual, "", &continua, LIN, COL);
 				break;
 
-			case 22: ///Estado >
+			case 33: ///Estado >
 				prox_Simb = ler_Proximo_Caractere();
 				if (prox_Simb == '=')
-					estado = 23; //Maior Igual
+					estado = 34; //Maior Igual
 				else
-					estado = 24; //Maior
+					estado = 35; //Maior
 				break;
 
-			case 23: ///Estado Maior Igual (FINAL)
+			case 34: ///Estado Maior Igual (FINAL)
 				setar_Token (&token_da_vez, tk_maior_igual, "", &continua, LIN, COL);
 				break;
 
-			case 24: ///Estado Maior (FINAL)
+			case 35: ///Estado Maior (FINAL)
 				setar_Token (&token_da_vez, tk_maior, "", &continua, LIN, COL);
 				retrocede_Caracteres(1);
 				break;
 
-			case 25: ///Estado +
+			case 36: ///Estado +
 				prox_Simb = ler_Proximo_Caractere();
 				if (prox_Simb == '+')
-					estado = 26; //Incremento
+					estado = 37; //Incremento
 				else
-					estado = 27; //Mais
+					estado = 38; //Mais
 				break;
 
-			case 26: ///Estado Incremento (FINAL)
+			case 37: ///Estado Incremento (FINAL)
 				setar_Token (&token_da_vez, tk_incr, "", &continua, LIN, COL);
 				break;
 
-			case 27: ///Estado Mais (FINAL)
+			case 38: ///Estado Mais (FINAL)
 				setar_Token (&token_da_vez, tk_incr, "", &continua, LIN, COL);
 				retrocede_Caracteres(1);
 				break;
 
-			case 28: ///Estado -
+			case 39: ///Estado -
 				prox_Simb = ler_Proximo_Caractere();
 				if (prox_Simb == '-')
-					estado = 29; //Decremento
+					estado = 40; //Decremento
 				else
-					estado = 30; //Menos
+					estado = 41; //Menos
 				break;
 
-			case 29: ///Estado Decremento (FINAL)
+			case 40: ///Estado Decremento (FINAL)
 				setar_Token (&token_da_vez, tk_decr, "", &continua, LIN, COL);
 				break;
 
-			case 30: ///Estado Menos (FINAL)
+			case 41: ///Estado Menos (FINAL)
 				setar_Token (&token_da_vez, tk_menos, "", &continua, LIN, COL);
 				retrocede_Caracteres(1);
 				break;
 
-			case 31: ///Estado Vezes (FINAL)
+			case 42: ///Estado Vezes (FINAL)
 				setar_Token (&token_da_vez, tk_vezes, "", &continua, LIN, COL);
 				break;
 
-			case 32: ///Estado /
+			case 43: ///Estado /
 				prox_Simb = ler_Proximo_Caractere();
 				if (prox_Simb == '*')
-					estado = 33;
+					estado = 44;
 				else
-					estado = 34;
+					estado = 45;
 				break;
 
-			case 33: ///Estado Comentario de linha (FINAL)
+			case 44: ///Estado Comentario de linha (FINAL)
 				while (prox_Simb != '\n' && prox_Simb != EOF)
 					prox_Simb = ler_Proximo_Caractere();
 				//Comentários devem ser ignorados pelo analisador léxico para efeito de reconhecimento de tokens
 				reiniciar_Automato();
 				break;
 
-			case 34: ///Estado Dividido (FINAL)
+			case 45: ///Estado Dividido (FINAL)
 				setar_Token (&token_da_vez, tk_dividido, "", &continua, LIN, COL);
-				retrocede_Caracteres(1);
-				break;
-
-			case 35: ///Comentario de bloco
-				while (prox_Simb != '*' && prox_Simb != EOF){
-					contador_de_bloco++;
-					prox_Simb = ler_Proximo_Caractere();
-				}
-				if (prox_Simb == '*') //Pode ser um fim de comentario
-					estado = 36;
-				else //Fim de arquivo
-					estado = -5;
-				break;
-
-			case 36: ///Possivel fim de comentario de bloco
-				while (prox_Simb == '*'){ //Ler proximo char, se * continua
-					contador_de_bloco++;
-					prox_Simb = ler_Proximo_Caractere();
-				}
-				if (prox_Simb == ')') //Fim do comentario
-					estado = 37;
-				else if (prox_Simb == EOF) //Fim de arquivo
-					estado = -5;
-				else //Não é fim de comentario
-					estado = 35;
-				break;
-
-			case 37: ///Fim do comentario de bloco (FINAL)
-				//Comentários devem ser ignorados pelo analisador léxico para efeito de reconhecimento de tokens
-				reiniciar_Automato();
-				break;
-
-			case 38: ///Estado Abre Parenteses (FINAL)
-				setar_Token (&token_da_vez, tk_abre_par, "", &continua, LIN, COL);
-				retrocede_Caracteres(1);
-				break;
-
-			case 39: ///Palavra reservada token++ (FINAL)
-				setar_Token (&token_da_vez, id_token, "", &continua, LIN, COL);
-				break;
-
-			case 40: ///Estado Digito Decimal Iniciando com digito
-				do {
-				   inserir_Caractere_No_Lexema(prox_Simb);
-				   prox_Simb = ler_Proximo_Caractere();
-				} while(isdigit(prox_Simb));
-				if (isspace(prox_Simb)) //Se branco: fim do decimal, muda pro estado 7
-					estado = 7;
-				else //Senao: caractere invalido, muda pro estado -3
-					estado = -3;
-				break;
-
-			case -2: ///Estado de erro lexico apos inteiro
-				if (isalpha(prox_Simb))
-					setar_Erro("Delimitador esperado");
-				estado = 5;
-				retrocede_Caracteres(1);
-				break;
-
-			case -3: ///Estado de erro lexico apos decimal
-				if (isalpha(prox_Simb))
-					setar_Erro("Delimitador esperado");
-				estado = 7;
-				retrocede_Caracteres(1);
-				break;
-
-			case -4: ///Estado de erro lexico nao fechameno da cadeia
-				setar_Erro("Cadeia nao fechada");
-				estado = 9;
-				retrocede_Caracteres(1);
-				break;
-
-			case -5: ///Estado de erro lexico Comentario de bloco não fechado
-				recuar(contador_de_bloco, LIN, COL);
-				setar_Erro("Comentario de bloco não fechado");
-				estado = 33; // Volta pro inicio e ignora ate o primeiro /n ou EOF
-				break;
-			
-			case -6: ///Estado de erro lexico Ponto Isolado (FINAL)
-				setar_Erro("Ponto isolado");
-				reiniciar_Automato();
 				retrocede_Caracteres(1);
 				break;
 
