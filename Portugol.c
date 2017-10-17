@@ -64,7 +64,9 @@ typedef enum {
 
 typedef struct{
 	int LIN, COL, COD;
-	char LEXEMA[TAMANHO_INICIAL], TOKEN[TAMANHO_INICIAL];
+	// tString LEXEMA
+	char LEXEMA[TAMANHO_INICIAL];
+	char TOKEN[50];
 } tToken_resultante;
 
 typedef struct{
@@ -72,9 +74,18 @@ typedef struct{
 	char ERRO[TAMANHO_INICIAL];
 } tErro;
 
+/* (FAZER) - Corrigir tamanho de strings
+typedef struct{
+	int tamanho_lexema;
+	int limite;
+	char * lexema;
+} tSring;
+*/
+
+
+//(FAZER) Retirar variaveis globais
 FILE *arquivo_de_entrada;
 int linha = 1, coluna = 0, tamanho_lexema = 0, estado = 0, contador_de_bloco = 0;
-Bool FINAL_DO_ARQUIVO = False;
 char lexema[TAMANHO_INICIAL], prox_Simb;
 int resumo[QUANTIDADE_DE_TOKENS] = {0};
 tErro erro_da_vez[TAMANHO_INICIAL]; 
@@ -86,8 +97,9 @@ int qtd_erros = 0;
 
 ///TOKENS.H
 int identificar_Token(){
+	//(FAZER)Corigir como obter tamanho de aux - Desse jeito funciona, uma vez q tamanho_lexema vai esta definido
 	char aux[tamanho_lexema];
-	strcpy(aux,lexema);
+	strcpy(aux, lexema);
 
 	for(int i = 0; i < strlen(aux); i++) // Torna todas as letras minusculas
 		aux[i] = tolower(aux[i]);
@@ -142,6 +154,7 @@ void inserir_Caractere_No_Lexema(char prox_Simb){
 	//(FAZER)
 	//A maneira correta de lidar com essa questão é alocar a estrutura de dados dinamicamente, ainda que com um
 	//valor inicial arbitrário, e, se necessário, redimensioná-la durante a execução do programa.
+	// tString
 }
 
 
@@ -194,6 +207,7 @@ const char * obter_Nome_Do_Token(tToken id_token){
 
 
 void setar_Token (tToken_resultante* token_da_vez, const int id_token, const char* Lexema, Bool* continua, const int LIN, const int COL){
+	//Melhorar copias (tToken_resultante) - (FAZER)
 	strcpy(token_da_vez->TOKEN, obter_Nome_Do_Token(id_token));
 	strcpy(token_da_vez->LEXEMA, Lexema);
 	token_da_vez->LIN = LIN;
@@ -210,6 +224,7 @@ void setar_Token (tToken_resultante* token_da_vez, const int id_token, const cha
 
 ///ERROS.H
 void setar_Erro(const char* tipo_de_erro){//tErro * erro_da_vez, const char prox_Simb
+	//(FAZER) Erros nao eh um vetor
 	erro_da_vez[qtd_erros].LIN = linha;
 	erro_da_vez[qtd_erros].COL = coluna;
 	strcpy(erro_da_vez[qtd_erros].ERRO, tipo_de_erro);
@@ -396,7 +411,6 @@ tToken_resultante analizador_Lexico (void){
 
 			case 10: ///Estado End of File (FINAL)
 				setar_Token (&token_da_vez, tk_EOF, "", &continua, LIN, COL);
-				FINAL_DO_ARQUIVO = True;
 				break;
 
 			case 11: ///Estado Virgula (FINAL)
@@ -747,10 +761,10 @@ int main (int argc, char *argv[]){
 		exit(1);
 	}
 	
-	while(!FINAL_DO_ARQUIVO){
+	do {
 		token_da_vez[n] = analizador_Lexico();
 		n++;
-	}
+	} while(token_da_vez[n-1].COD-1 != tk_EOF);
 
 	
 	printar_Lista_De_Erros_Lexicos(argv[1]);
