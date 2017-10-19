@@ -12,10 +12,6 @@ int resumo[QUANTIDADE_DE_TOKENS] = {0};
 
 
 //typedefs
-typedef enum{
-	False, True
-} Bool;
-
 typedef enum {
 	tk_EOF,
 	tk_IDEN,
@@ -60,30 +56,9 @@ typedef enum {
 	tk_dividido
 } tToken;
 
-typedef struct{
-	int LIN, COL, COD;
-	tString LEXEMA;
-	char TOKEN[TAMANHO_DO_MAIOR_TOKEN];
-} tToken_resultante;
-
-struct elemento{
-    tToken_resultante dados;
-    struct elemento *prox;
-}; //definindo que cada elemento da lista posui os dados de um Token resultante e aponta para o prox
-
-typedef struct elemento* Lista; //definindo a cabeca q ira apontar para os elementos
-typedef struct elemento Elem; //disendo q cada elemento se chamara Elem
 
 
 //Prototipos
-Lista* CriaL();
-void LiberaL(Lista*);
-int InsereLf(Lista*, tToken_resultante);
-int identificar_Token(const tString);
-void inserir_Caractere_No_Lexema(const char, tString *);
-const char * obter_Nome_Do_Token(tToken id_token);
-void setar_Token (tToken_resultante*, const int, const char *, Bool* , const int, const int);
-
 
 //Funcoes
 
