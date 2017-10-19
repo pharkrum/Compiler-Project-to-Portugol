@@ -12,7 +12,7 @@
 
 #define TAMANHO_INICIAL 256
 #define QUANTIDADE_DE_TOKENS 41
-#define TAMANHO_DO_MAIOR_TOKEN 15
+#define TAMANHO_DO_MAIOR_NOME_TOKEN 15
 #define QUANTIDADE_DE_ESTADOS 45
 
 typedef enum {
@@ -129,9 +129,9 @@ int main (int argc, char *argv[]){
 
 tToken analizador_Lexico(void){
 	int estado = 0, id_token, contador_de_bloco;
-	char prox_Simb;
+	char prox_Simb = ' '; 
 	
-	//reiniciar_Automato(); ???
+	//iniciar_Lexema(); ???
 	while (1){
 		switch (estado){
 			case 0: ///Estado Inicial
@@ -330,6 +330,7 @@ tToken analizador_Lexico(void){
 				break;
 
 			case 42: ///Estado Comentario de linha
+				retrocede_Caracteres(1, prox_Simb);
 				break;
 
 			case 43: ///Estado Dividido (FINAL)
@@ -359,10 +360,10 @@ void inicia_Tabela_Transicoes (void) {
 	
 	int i;
 	
-	//Setar padrao para o estado de transicao Defalt
+	//Setar NULL
 	for (int i=0; i<QUANTIDADE_DE_ESTADOS; i++){
 		for (int j=0; j<TAMANHO_INICIAL; j++){
-			tabela_Transicoes[i][j] = 44;
+			tabela_Transicoes[i][j] = -1;
 		}
 	}
 	
@@ -418,6 +419,11 @@ void inicia_Tabela_Transicoes (void) {
 	
 	//Estado 7 e 8
 	//NULL
+	
+	//Estad 9
+	for (i=0; i<TAMANHO_INICIAL; i++)
+		tabela_Transicoes[9][i] = 10;
+	transicao_digitos(9, 6);
 	
 	//Estado 10
 	for (i=0; i<TAMANHO_INICIAL; i++)
@@ -510,7 +516,7 @@ void inicia_Tabela_Transicoes (void) {
 	for (i=0; i<TAMANHO_INICIAL; i++)
 		tabela_Transicoes[42][i] = 42;
 	tabela_Transicoes[42]['\n'] = 0;
-	tabela_Transicoes[42][255] = 14;
+	tabela_Transicoes[42][255] = 0; //14 - Pode ser
 	
 	//Estado 43
 	//NULL
@@ -551,9 +557,6 @@ void transicao_branco(const int estado_atual, const int estado_destino){
 	tabela_Transicoes[estado_atual][' '] = estado_destino;
 	tabela_Transicoes[estado_atual]['\t'] = estado_destino;
 	tabela_Transicoes[estado_atual]['\n'] = estado_destino;
-	tabela_Transicoes[estado_atual]['\v'] = estado_destino;
-	tabela_Transicoes[estado_atual]['\f'] = estado_destino;
-	tabela_Transicoes[estado_atual]['\r'] = estado_destino;
 }
 
 void retrocede_Caracteres(const int n, const char prox_Simb){
