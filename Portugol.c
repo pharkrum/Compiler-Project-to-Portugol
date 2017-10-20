@@ -10,7 +10,7 @@
 //#include "Codigo/resultados.h"
 
 
-#define TAMANHO_INICIAL 256
+#define TOTAL_CLASSES_CARACTERES 21
 #define QUANTIDADE_DE_TOKENS 41
 #define TAMANHO_DO_MAIOR_NOME_TOKEN 15
 #define QUANTIDADE_DE_ESTADOS 45
@@ -59,25 +59,60 @@ typedef enum {
 	tk_dividido
 } tToken;
 
+typedef enum{
+	tc_branco,
+	tc_quebra_linha,
+	tc_letra,
+	tc_digito,
+	tc_underline,
+	tc_aspas,
+	tc_ponto,
+	tc_virgula,
+	tc_ponto_virgula,
+	tc_dois_pontos,
+	tc_abre_parenteses,
+	tc_fecha_parenteses,
+	tc_menor,
+	tc_igual,
+	tc_maior,
+	tc_mais,
+	tc_menos,
+	tc_vezes,
+	tc_dividido,
+	tc_EOF,
+	tc_outro
+} tClasse_caractere;
+
+//typedef lexema
+
+//struct simbolos
+//Para cada token: COD, LEXEMA, ocorrencias(LIN, COL)
+//combinação token–lexema incluida uma única vez na tabela
+
+//tabela de simbolos HASH
+
 
 ///PROTOTIPOS
 tToken analizador_Lexico(void);
 void inicia_Tabela_Transicoes (void);
-unsigned char leia_Proximo_Caractere(void);
-void transicao_digitos(const int, const int);
-void transicao_letras(const int, const int);
-void transicao_branco(const int, const int);
+char leia_Proximo_Caractere(void);
 void retrocede_Caracteres(const int, const char);
+tClasse_caractere carctere_2_tClasse_caractere(char prox_Simb);
+//iniciar_Lexema();
 //inserir_Caractere_No_Lexema();
-//identificar_Token();
+//int identificar_Token(void);
 //setar_Erro();
 //retrocede_Ate();
+//adiconar_Na Tabela De Simbolos();
 
-
+//imprimir_Lista_De_Erros_Lexicos();
+//imprimir_Lista_De_Tokens_Reconhecidos();
+//imprimir_Resumo();
+//imprimir_Tabela_De_Simbolos();
 
 ///VARIAVEIS
 FILE *arquivo_de_entrada;
-int tabela_Transicoes[QUANTIDADE_DE_ESTADOS][TAMANHO_INICIAL];
+char tabela_Transicoes[QUANTIDADE_DE_ESTADOS][TOTAL_CLASSES_CARACTERES];
 int linha_arquivo = 1, coluna_arquivo = 0, linha_token, coluna_token;
 
 
@@ -85,7 +120,7 @@ int linha_arquivo = 1, coluna_arquivo = 0, linha_token, coluna_token;
 ///FUNCAO PRINCIPAL
 int main (int argc, char *argv[]){
 	tToken token_da_vez;
-	//int n = 0;
+	int numero_de_tokens = 0;
 	
 	if (argc != 2){
 		printf("Exemplo de execucao: ./Portugol prog01.ptg\nTente novamente\n");
@@ -100,17 +135,29 @@ int main (int argc, char *argv[]){
 	}
 	
 	inicia_Tabela_Transicoes();
+	
+	/*printf("      b  \\n  l  d  _  \"  .  ,  ;  :  (  )  <  =  >  +  -  *  /  e  ot\n");
+	for (int i = 0; i < QUANTIDADE_DE_ESTADOS; i++){
+		printf("%3d |", i);
+		for (int j = 0; j < TOTAL_CLASSES_CARACTERES; j++){
+			printf ("%3d", tabela_Transicoes[i][j]);
+		}
+		printf("\n");
+	}*/
+	
+	//Alocar token_da_vez com um tamanho inicial
+	
 	do {
 		token_da_vez = analizador_Lexico();
-		//n++;
-		//printf("%s\n",obter_Nome_Do_Token(token_da_vez));
+		numero_de_tokens++;
+		//se token_da_vez atingir o tamanho (ate entao alocado), entao: realocar
 	} while(token_da_vez != tk_EOF);
 
 	
-	//printar_Lista_De_Erros_Lexicos(argv[1]);
-	//printar_Lista_De_Tokens_Reconhecidos(argv[1], token_da_vez, n);
-	//printar_Resumo();
-	//printar_Tabela_De_Simbolos(argv[1]);
+	//imprimir_Lista_De_Erros_Lexicos(argv[1]);
+	//imprimir_Lista_De_Tokens_Reconhecidos(argv[1], token_da_vez, n);
+	//imprimir_Resumo();
+	//imprimir_Tabela_De_Simbolos(argv[1]);
 	
 	printf("\nAnalise concluida com sucesso, os seguintes arquivos gerados:\n");
 	printf("   %s.err com o conteúdo do arquivo de entrada e os erros léxicos devidamente marcados\n", argv[1]);
@@ -131,7 +178,7 @@ tToken analizador_Lexico(void){
 	int estado = 0, id_token, contador_de_bloco;
 	char prox_Simb = ' '; 
 	
-	//iniciar_Lexema(); ???
+	//iniciar_Lexema();
 	while (1){
 		switch (estado){
 			case 0: ///Estado Inicial
@@ -254,7 +301,6 @@ tToken analizador_Lexico(void){
 
 			case 23: ///Estado de erro lexico Comentario de bloco não fechado
 				//retrocede_Ate(contador_de_bloco, linha_token, coluna_token); //(muitos) Para serem lidos novamente mudando para q44 (para todo char lido)
-				//Verificar se o retrocede volta certo ?????
 				//setar_Erro("Comentario de bloco não fechado");
 				break;
 			
@@ -330,7 +376,6 @@ tToken analizador_Lexico(void){
 				break;
 
 			case 42: ///Estado Comentario de linha
-				retrocede_Caracteres(1, prox_Simb);
 				break;
 
 			case 43: ///Estado Dividido (FINAL)
@@ -344,192 +389,71 @@ tToken analizador_Lexico(void){
 				break;
 		}
 		prox_Simb = leia_Proximo_Caractere();
-		estado = tabela_Transicoes[estado][(unsigned char)prox_Simb];
+		estado = tabela_Transicoes[estado][carctere_2_tClasse_caractere(prox_Simb)];
 	}
 	return 0;
 }
 
 
-
 void inicia_Tabela_Transicoes (void) {
-	/*	tabela_Transicoes[QUANTIDADE_DE_ESTADOS][TAMANHO_INICIAL]
-		transicao_digitos(estado_atual, estado_destino);
-		transicao_letras(estado_atual, estado_destino);
-		EOF (unsigned = 255)
-	*/
+	char aux[QUANTIDADE_DE_ESTADOS][TOTAL_CLASSES_CARACTERES] = {
+		{0, 0, 1, 3, 44, 11, 9, 15, 16, 17, 18, 24, 25, 30, 31, 34, 37, 40, 41, 14, 44},  //Estado 0
+		{2, 2, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},  //Estado 1
+		{ },  //Estado 2
+		{4, 4, 5, 3, 4, 4, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4},  //Estado 3
+		{ },  //Estado 4
+		{ },  //Estado 5
+		{7, 7, 8, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7},  //Estado 6
+		{ },  //Estado 7
+		{ },  //Estado 8
+		{10, 10, 6, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10},  //Estado 9
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  //Estado 10
+		{11, 13, 11, 11, 11, 12, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 13, 11},  //Estado 11
+		{ },  //Estado 12
+		{ },  //Estado 13
+		{ },  //Estado 14
+		{ },  //Estado 15
+		{ },  //Estado 16
+		{ },  //Estado 17
+		{20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 19, 20, 20, 20},  //Estado 18
+		{19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 21, 19, 23, 19},  //Estado 19
+		{ },  //Estado 20
+		{19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 22, 19, 19, 19, 19, 19, 19, 21, 19, 23, 19},  //Estado 21
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  //Estado 22
+		{42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42},  //Estado 23
+		{ },  //Estado 24
+		{29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 28, 27, 29, 26, 29, 29, 29, 29},  //Estado 25
+		{ },  //Estado 26
+		{ },  //Estado 27
+		{ },  //Estado 28
+		{ },  //Estado 29
+		{ },  //Estado 30
+		{33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 32, 33, 33, 33, 33, 33, 33, 33},  //Estado 31
+		{ },  //Estado 32
+		{ },  //Estado 33
+		{36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 35, 36, 36, 36, 36, 36},  //Estado 34
+		{ },  //Estado 35
+		{ },  //Estado 36
+		{39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 38, 39, 39, 39, 39},  //Estado 37
+		{ },  //Estado 38
+		{ },  //Estado 39
+		{ },  //Estado 40
+		{43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 42, 43, 43, 43},  //Estado 41
+		{42, 0, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 14, 42},  //Estado 42
+		{ },  //Estado 43
+		{ },  //Estado 44
+	};
 	
-	int i;
+	for (int i = 0; i < QUANTIDADE_DE_ESTADOS; i++)
+		for (int j = 0; j < TOTAL_CLASSES_CARACTERES; j++)
+			tabela_Transicoes[i][j] = aux[i][j];
 	
-	//Setar NULL
-	for (int i=0; i<QUANTIDADE_DE_ESTADOS; i++){
-		for (int j=0; j<TAMANHO_INICIAL; j++){
-			tabela_Transicoes[i][j] = -1;
-		}
-	}
-	
-	//Estado 0
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[0][i] = 44;
-	transicao_branco(0, 0);
-	transicao_letras(0, 1);
-	transicao_digitos(0, 3);
-	tabela_Transicoes[0]['.'] = 9;
-	tabela_Transicoes[0]['\"'] = 11;
-	tabela_Transicoes[0][255] = 14; //EOF
-	tabela_Transicoes[0][','] = 15;
-	tabela_Transicoes[0][';'] = 16;
-	tabela_Transicoes[0][':'] = 17;
-	tabela_Transicoes[0]['('] = 18;
-	tabela_Transicoes[0][')'] = 24;
-	tabela_Transicoes[0]['<'] = 25;
-	tabela_Transicoes[0]['='] = 30;
-	tabela_Transicoes[0]['>'] = 31;
-	tabela_Transicoes[0]['+'] = 34;
-	tabela_Transicoes[0]['-'] = 37;
-	tabela_Transicoes[0]['*'] = 40;
-	tabela_Transicoes[0]['/'] = 41;
-    
-    
-    //Estado 1
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[1][i] = 2;
-	transicao_letras(1, 1);
-	transicao_digitos(1, 1);
-	tabela_Transicoes[1]['_'] = 1;
-	
-	//Estado 2
-	//NULL
-	
-	//Estado 3
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[3][i] = 4;
-	transicao_letras(3, 5);
-	transicao_digitos(3, 3);
-	tabela_Transicoes[3]['.'] = 6;
-	
-	//Estado 4 e 5
-	//NULL
-	
-	//Estado 6
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[6][i] = 7;
-	transicao_letras(6, 8);
-	transicao_digitos(6, 6);
-	
-	
-	//Estado 7 e 8
-	//NULL
-	
-	//Estad 9
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[9][i] = 10;
-	transicao_digitos(9, 6);
-	
-	//Estado 10
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[10][i] = 0;
-		
-	//Estado 11
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[11][i] = 11;
-	tabela_Transicoes[11]['\"'] = 12;
-	tabela_Transicoes[11][255] = 13; //EOF
-	tabela_Transicoes[11]['\n'] = 13;
-	
-	
-	//Estado 12, 13, 14, 15, 16 e 17
-	//NULL
-	
-	//Estado 18
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[18][i] = 20;
-	tabela_Transicoes[18]['*'] = 19;
-	
-	//Estado 19
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[19][i] = 19;
-	tabela_Transicoes[19]['*'] = 21;
-	tabela_Transicoes[19][255] = 23; //EOF
-	
-	//Estado 20
-	//NULL
-	
-	//Estado 21
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[21][i] = 19;
-	tabela_Transicoes[21]['*'] = 21;
-	tabela_Transicoes[21][')'] = 22;
-	tabela_Transicoes[21][255] = 23; //EOF
-	
-	//Estado 22
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[22][i] = 0;
-	
-	//Estado 23
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[23][i] = 42;
-	
-	//Estado 24
-	//NULL
-	
-	//Estado 25
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[25][i] = 29;
-	tabela_Transicoes[25]['-'] = 26;
-	tabela_Transicoes[25]['>'] = 27;
-	tabela_Transicoes[25]['='] = 28;
-	
-	//Estado 26, 27, 28, 29, 30
-	//NULL
-	
-	
-	//Estado 31
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[31][i] = 33;
-	tabela_Transicoes[31]['='] = 32;
-	
-	//Estado 32, 33
-	//NULL
-	
-	//Estado 34
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[34][i] = 36;
-	tabela_Transicoes[34]['+'] = 35;
-	
-	//Estado 35 e 36
-	//NULL
-		
-	//Estado 37
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[37][i] = 39;
-	tabela_Transicoes[37]['-'] = 38;
-	
-	//Estado 38, 39, 40
-	//NULL
-		
-	//Estado 41
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[41][i] = 43;
-	tabela_Transicoes[41]['*'] = 42;
-	
-	//Estado 42
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[42][i] = 42;
-	tabela_Transicoes[42]['\n'] = 0;
-	tabela_Transicoes[42][255] = 0; //14 - Pode ser
-	
-	//Estado 43
-	//NULL
-
-	//Estado 44 (Default)
-	for (i=0; i<TAMANHO_INICIAL; i++)
-		tabela_Transicoes[44][i] = 0;
-	
-    return;
+	return ;
 }
 
-unsigned char leia_Proximo_Caractere(void){
-	unsigned char prox_Simb = getc(arquivo_de_entrada);
+
+char leia_Proximo_Caractere(void){
+	char prox_Simb = getc(arquivo_de_entrada);
 	if (prox_Simb != EOF) //EOF não conta como coluna
 		coluna_arquivo++;
 	if(prox_Simb == '\n'){ // Se o caracter for uma quebra de linha: Novos valores para linha e coluna
@@ -539,25 +463,6 @@ unsigned char leia_Proximo_Caractere(void){
 	return prox_Simb;
 }
 
-void transicao_digitos(const int estado_atual, const int estado_destino){
-	int i;
-	for (i='0'; i<='9'; i++)
-		tabela_Transicoes[estado_atual][i] = estado_destino;
-}
-
-void transicao_letras(const int estado_atual, const int estado_destino){
-	int i;
-	for (i='a'; i<='z'; i++)
-		tabela_Transicoes[estado_atual][i] = estado_destino;
-	for (i='A'; i<='Z'; i++)
-		tabela_Transicoes[estado_atual][i] = estado_destino;
-}
-
-void transicao_branco(const int estado_atual, const int estado_destino){
-	tabela_Transicoes[estado_atual][' '] = estado_destino;
-	tabela_Transicoes[estado_atual]['\t'] = estado_destino;
-	tabela_Transicoes[estado_atual]['\n'] = estado_destino;
-}
 
 void retrocede_Caracteres(const int n, const char prox_Simb){
 	fseek(arquivo_de_entrada, -n*sizeof(char), SEEK_CUR);
@@ -566,5 +471,33 @@ void retrocede_Caracteres(const int n, const char prox_Simb){
 		linha_arquivo--; //Isso nao influencia na coluna, uma vez que o prox a ser lido será '\n, o valor da coluna é zerado
 }
 
+
+tClasse_caractere carctere_2_tClasse_caractere(char prox_Simb){
+	if (isalpha(prox_Simb))
+		return tc_letra;
+	if (isdigit(prox_Simb))
+		return tc_digito;
+	switch (prox_Simb){
+		case '\t':  case ' ': return tc_branco;
+		case '\n': return tc_quebra_linha;
+		case '_': return tc_underline;
+		case '\"': return tc_aspas;
+		case '.': return tc_ponto;
+		case ',': return tc_virgula;
+		case ';': return tc_ponto_virgula;
+		case ':': return tc_dois_pontos;
+		case '(': return tc_abre_parenteses;
+		case ')': return tc_fecha_parenteses;
+		case '<': return tc_menor;
+		case '=': return tc_igual;
+		case '>': return tc_maior;
+		case '+': return tc_mais;
+		case '-': return tc_menos;
+		case '*': return tc_vezes;
+		case '/': return tc_dividido;
+		case EOF: return tc_EOF;
+		default: return tc_outro;
+	}	
+}
 
 
