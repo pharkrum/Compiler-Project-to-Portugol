@@ -11,9 +11,11 @@
 
 
 #define TOTAL_CLASSES_CARACTERES 21
-#define QUANTIDADE_DE_TOKENS 41
-#define TAMANHO_DO_MAIOR_NOME_TOKEN 15
+//#define QUANTIDADE_DE_TOKENS 41
+//#define TAMANHO_DO_MAIOR_NOME_TOKEN 15
 #define QUANTIDADE_DE_ESTADOS 45
+#define LIMITE_INICIAL_DE_ALOCACAO 255
+
 
 typedef enum {
 	tk_EOF,
@@ -83,7 +85,20 @@ typedef enum{
 	tc_outro
 } tClasse_caractere;
 
-//typedef lexema
+typedef enum{
+	er_caracter_invalido,
+	er_delimitador_esperado,
+	er_ponto_isolado,
+	er_cadeia_nao_fechada,
+	er_comentario_de_bloco_nao_fechado
+} tErro;
+
+
+typedef struct{
+	int tamanho_string;
+	int limite_string;
+	char * string;
+} tSring;
 
 //struct simbolos
 //Para cada token: COD, LEXEMA, ocorrencias(LIN, COL)
@@ -98,8 +113,13 @@ void inicia_Tabela_Transicoes (void);
 char leia_Proximo_Caractere(void);
 void retrocede_Caracteres(const int, const char);
 tClasse_caractere carctere_2_tClasse_caractere(char prox_Simb);
-//iniciar_Lexema();
-//inserir_Caractere_No_Lexema();
+//void alocar_Vetor(tToken *, limite_de_caracteres);
+//void realocar_Vetor(tToken *, limite_de_caracteres);
+//void desalocar_Vetor(tToken *);
+void iniciar_Lexema(void);
+void realocar_Lexema(void);
+void reiniciar_Lexema(void);
+void inserir_Caractere_No_Lexema(char prox_Simb);
 //int identificar_Token(void);
 //setar_Erro();
 //retrocede_Ate();
@@ -114,58 +134,77 @@ tClasse_caractere carctere_2_tClasse_caractere(char prox_Simb);
 FILE *arquivo_de_entrada;
 char tabela_Transicoes[QUANTIDADE_DE_ESTADOS][TOTAL_CLASSES_CARACTERES];
 int linha_arquivo = 1, coluna_arquivo = 0, linha_token, coluna_token;
+tSring lexema;
+
+
 
 
 
 ///FUNCAO PRINCIPAL
 int main (int argc, char *argv[]){
-	tToken token_da_vez;
-	int numero_de_tokens = 0;
+	tToken * token_da_vez;
+	int numero_de_tokens, limite_de_caracteres;
 	
-	if (argc != 2){
-		printf("Exemplo de execucao: ./Portugol prog01.ptg\nTente novamente\n");
-		exit(1);
-	}
-	
-	printf("Arquivo : %s \n\n", argv[1]);
+	if (argc < 2){
+		printf("Exemplo de execucao: ./Portugol prog01.ptg\nTente novamente\n\n");
+	} else {
+		inicia_Tabela_Transicoes();
+		iniciar_Lexema();
+		
+		/*printf("      b  \\n  l  d  _  \"  .  ,  ;  :  (  )  <  =  >  +  -  *  /  e  ot\n");
+		for (int i = 0; i < QUANTIDADE_DE_ESTADOS; i++){
+			printf("%3d |", i);
+			for (int j = 0; j < TOTAL_CLASSES_CARACTERES; j++){
+				printf ("%3d", tabela_Transicoes[i][j]);
+			}
+			printf("\n");
+		}*/
+		
+		for (int i=1; i < argc; i++){
+			printf("\nArquivo : %s \n", argv[i]);
+			
+			if ((arquivo_de_entrada = fopen(argv[i], "r")) == NULL){
+				printf("Erro ao abrir o arquivo!!! \nPor favor, verifique a existencia do mesmo e tente novamente.\n");
+				exit(1);
+			}
+			
+			///Iniciando tabela com os tokens recebidos
+			numero_de_tokens = 0;
+			limite_de_caracteres = LIMITE_INICIAL_DE_ALOCACAO;
+			token_da_vez = (tToken *) malloc(limite_de_caracteres * sizeof(tToken));
+			
+			///Recebendo tokens
+			do {
+				token_da_vez[numero_de_tokens] = analizador_Lexico();
+				numero_de_tokens++;
+				if (numero_de_tokens == limite_de_caracteres-1){
+					limite_de_caracteres *= 2;
+					token_da_vez = (tToken *) realloc(token_da_vez, limite_de_caracteres * sizeof(tToken));
+				}
+				//ADD TOKEN NA LISTA
+				printf("Token: %d   Lexema: %s\n", token_da_vez[numero_de_tokens-1], lexema.string);
+			} while(token_da_vez[numero_de_tokens-1] != tk_EOF);
 
-	if ((arquivo_de_entrada = fopen(argv[1], "r")) == NULL){
-		printf("Erro ao abrir o arquivo!!! \nPor favor, verifique a existencia do mesmo e tente novamente.\n");
-		exit(1);
-	}
-	
-	inicia_Tabela_Transicoes();
-	
-	/*printf("      b  \\n  l  d  _  \"  .  ,  ;  :  (  )  <  =  >  +  -  *  /  e  ot\n");
-	for (int i = 0; i < QUANTIDADE_DE_ESTADOS; i++){
-		printf("%3d |", i);
-		for (int j = 0; j < TOTAL_CLASSES_CARACTERES; j++){
-			printf ("%3d", tabela_Transicoes[i][j]);
+			
+			//imprimir_Lista_De_Erros_Lexicos(argv[i]);
+			//imprimir_Lista_De_Tokens_Reconhecidos(argv[i], token_da_vez, n);
+			//imprimir_Resumo();
+			//imprimir_Tabela_De_Simbolos(argv[i]);
+			
+			printf("Os seguintes arquivos gerados:\n");
+			printf("   %s.err com o conteúdo do arquivo de entrada e os erros léxicos devidamente marcados\n", argv[1]);
+			printf("   %s.tbl com a lista de tokens reconhecidos\n", argv[1]);
+			printf("   %s.tok com o conteúdo da tabela de símbolos após processamento.\n\n", argv[1]);
+			
+			///Free de token_da_vez
+			free(token_da_vez);
+			
+			///Fechando Arquivo de entrada
+			fclose(arquivo_de_entrada);
 		}
-		printf("\n");
-	}*/
-	
-	//Alocar token_da_vez com um tamanho inicial
-	
-	do {
-		token_da_vez = analizador_Lexico();
-		numero_de_tokens++;
-		//se token_da_vez atingir o tamanho (ate entao alocado), entao: realocar
-	} while(token_da_vez != tk_EOF);
-
-	
-	//imprimir_Lista_De_Erros_Lexicos(argv[1]);
-	//imprimir_Lista_De_Tokens_Reconhecidos(argv[1], token_da_vez, n);
-	//imprimir_Resumo();
-	//imprimir_Tabela_De_Simbolos(argv[1]);
-	
-	printf("\nAnalise concluida com sucesso, os seguintes arquivos gerados:\n");
-	printf("   %s.err com o conteúdo do arquivo de entrada e os erros léxicos devidamente marcados\n", argv[1]);
-	printf("   %s.tbl com a lista de tokens reconhecidos\n", argv[1]);
-	printf("   %s.tok com o conteúdo da tabela de símbolos após processamento.\n\n", argv[1]);
-	
-	fclose(arquivo_de_entrada);
-	
+		///Free tString lexema
+		free(lexema.string);
+	}
 	return 0;
 }
 
@@ -176,9 +215,9 @@ int main (int argc, char *argv[]){
 
 tToken analizador_Lexico(void){
 	int estado = 0, id_token, contador_de_bloco;
-	char prox_Simb = ' '; 
+	char prox_Simb = ' ';
 	
-	//iniciar_Lexema();
+	reiniciar_Lexema();
 	while (1){
 		switch (estado){
 			case 0: ///Estado Inicial
@@ -187,7 +226,7 @@ tToken analizador_Lexico(void){
 				break;
 				
 			case 1: ///Estado identificador ou palavra reservada
-				//inserir_Caractere_No_Lexema(prox_Simb);
+				inserir_Caractere_No_Lexema(prox_Simb);
 				break;
 				
 			case 2: /// Estado de verificacao Palavra reservada ou identificador (FINAL)
@@ -203,7 +242,7 @@ tToken analizador_Lexico(void){
 				break;
 
 			case 3: /// Estado Digito (inteiro ou decimal)
-				//inserir_Caractere_No_Lexema(prox_Simb);
+				inserir_Caractere_No_Lexema(prox_Simb);
 				break;
 
 			case 4: /// Estado Digito Inteiro (FINAL)
@@ -220,7 +259,7 @@ tToken analizador_Lexico(void){
 				break;
 				
 			case 6: ///Estado Digito Decimal apos o ponto
-				//inserir_Caractere_No_Lexema(prox_Simb);
+				inserir_Caractere_No_Lexema(prox_Simb);
 				break;
 				
 			case 7: /// Estado Digito Decimal (FINAL)
@@ -235,9 +274,9 @@ tToken analizador_Lexico(void){
 				//Adicionar Decimal na tabela de simbolos (FAZER)
 				return (tk_DECIMAL);
 				break;
-								
+			
 			case 9: /// Estado Digito Decimal Iniciando com ponto
-				//inserir_Caractere_No_Lexema(prox_Simb);
+				inserir_Caractere_No_Lexema(prox_Simb);
 				break;
 				
 			case 10: ///Estado de erro lexico Ponto Isolado (FINAL)
@@ -246,11 +285,11 @@ tToken analizador_Lexico(void){
 				break;
 
 			case 11: ///Estado Cadeia
-				//inserir_Caractere_No_Lexema(prox_Simb);
+				inserir_Caractere_No_Lexema(prox_Simb);
 				break;
 
 			case 12: ///Estado Cadeia (FINAL)
-				//inserir_Caractere_No_Lexema(prox_Simb);
+				inserir_Caractere_No_Lexema(prox_Simb);
 				//Adiciona cadeia na tabela de simbolos (FAZER)
 				return (tk_CADEIA);
 				break;
@@ -301,7 +340,7 @@ tToken analizador_Lexico(void){
 
 			case 23: ///Estado de erro lexico Comentario de bloco não fechado
 				//retrocede_Ate(contador_de_bloco, linha_token, coluna_token); //(muitos) Para serem lidos novamente mudando para q44 (para todo char lido)
-				//setar_Erro("Comentario de bloco não fechado");
+				//setar_Erro("Comentario de bloco nao fechado");
 				break;
 			
 			case 24:  ///Estado Fecha Parenteses (FINAL)
@@ -399,49 +438,49 @@ void inicia_Tabela_Transicoes (void) {
 	char aux[QUANTIDADE_DE_ESTADOS][TOTAL_CLASSES_CARACTERES] = {
 		{0, 0, 1, 3, 44, 11, 9, 15, 16, 17, 18, 24, 25, 30, 31, 34, 37, 40, 41, 14, 44},  //Estado 0
 		{2, 2, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},  //Estado 1
-		{ },  //Estado 2
+		{ 0 },  //Estado 2
 		{4, 4, 5, 3, 4, 4, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4},  //Estado 3
-		{ },  //Estado 4
-		{ },  //Estado 5
+		{ 0 },  //Estado 4
+		{ 0 },  //Estado 5
 		{7, 7, 8, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7},  //Estado 6
-		{ },  //Estado 7
-		{ },  //Estado 8
+		{ 0 },  //Estado 7
+		{ 0 },  //Estado 8
 		{10, 10, 6, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10},  //Estado 9
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  //Estado 10
 		{11, 13, 11, 11, 11, 12, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 13, 11},  //Estado 11
-		{ },  //Estado 12
-		{ },  //Estado 13
-		{ },  //Estado 14
-		{ },  //Estado 15
-		{ },  //Estado 16
-		{ },  //Estado 17
+		{ 0 },  //Estado 12
+		{ 0 },  //Estado 13
+		{ 0 },  //Estado 14
+		{ 0 },  //Estado 15
+		{ 0 },  //Estado 16
+		{ 0 },  //Estado 17
 		{20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 19, 20, 20, 20},  //Estado 18
 		{19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 21, 19, 23, 19},  //Estado 19
-		{ },  //Estado 20
-		{19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 22, 19, 19, 19, 19, 19, 19, 21, 19, 23, 19},  //Estado 21
+		{ 0 },  //Estado 20
+		{19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 22, 19, 19, 19, 19, 19, 21, 19, 23, 19},  //Estado 21
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  //Estado 22
 		{42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42},  //Estado 23
-		{ },  //Estado 24
+		{ 0 },  //Estado 24
 		{29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 28, 27, 29, 26, 29, 29, 29, 29},  //Estado 25
-		{ },  //Estado 26
-		{ },  //Estado 27
-		{ },  //Estado 28
-		{ },  //Estado 29
-		{ },  //Estado 30
+		{ 0 },  //Estado 26
+		{ 0 },  //Estado 27
+		{ 0 },  //Estado 28
+		{ 0 },  //Estado 29
+		{ 0 },  //Estado 30
 		{33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 32, 33, 33, 33, 33, 33, 33, 33},  //Estado 31
-		{ },  //Estado 32
-		{ },  //Estado 33
+		{ 0 },  //Estado 32
+		{ 0 },  //Estado 33
 		{36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 35, 36, 36, 36, 36, 36},  //Estado 34
-		{ },  //Estado 35
-		{ },  //Estado 36
+		{ 0 },  //Estado 35
+		{ 0 },  //Estado 36
 		{39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 38, 39, 39, 39, 39},  //Estado 37
-		{ },  //Estado 38
-		{ },  //Estado 39
-		{ },  //Estado 40
+		{ 0 },  //Estado 38
+		{ 0 },  //Estado 39
+		{ 0 },  //Estado 40
 		{43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 42, 43, 43, 43},  //Estado 41
 		{42, 0, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 14, 42},  //Estado 42
-		{ },  //Estado 43
-		{ },  //Estado 44
+		{ 0 },  //Estado 43
+		{ 0 },  //Estado 44
 	};
 	
 	for (int i = 0; i < QUANTIDADE_DE_ESTADOS; i++)
@@ -500,4 +539,40 @@ tClasse_caractere carctere_2_tClasse_caractere(char prox_Simb){
 	}	
 }
 
+
+void iniciar_Lexema(void){
+	lexema.limite_string = LIMITE_INICIAL_DE_ALOCACAO;
+	lexema.tamanho_string = 0;
+	lexema.string = (char*) malloc(lexema.limite_string * sizeof(char));
+	if (lexema.string == NULL){
+        printf("Erro durante a alocacao!!! \nInfelizmente o programa travou\n");
+        exit(-1);
+    }
+    lexema.string[0] = '\0';
+}
+
+
+void realocar_Lexema(void){
+	lexema.limite_string *= 2;
+	lexema.string = (char*) realloc (lexema.string, lexema.limite_string * sizeof(char));
+	if (lexema.string == NULL){
+        printf("Erro durante a alocacao!!! \nInfelizmente o programa travou\n");
+        exit(-1);
+    }
+}
+
+
+void reiniciar_Lexema(void){
+	lexema.tamanho_string = 0;
+    lexema.string[0] = '\0';
+}
+
+
+void inserir_Caractere_No_Lexema(char prox_Simb){
+	if (lexema.tamanho_string == (lexema.limite_string - 2))
+		realocar_Lexema();
+	lexema.string[lexema.tamanho_string] = prox_Simb;
+	lexema.tamanho_string++;
+	lexema.string[lexema.tamanho_string] = '\0';
+}
 
