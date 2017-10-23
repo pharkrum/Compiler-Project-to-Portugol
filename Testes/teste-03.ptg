@@ -1,0 +1,12 @@
+(* teste-03.ptg *))
+
+inicio
+  int: i, n, fat;
+  imprima ("Digite um nro: ");
+  leia (n);
+  para i de 1.0 ate n passo (2*.5)    /* Cálculo
+    fat = fat*i;                      /* do 
+  fim_para                            /* fatorial
+  imprima ("Fatorial = ");
+  imprima (fat);
+fim

@@ -1,0 +1,25 @@
+Inicio
+  int: num;
+  Int: nUm, NuM;
+  INT: Maior;
+  imprima ("Digite 3 nros:");
+  leia (num);
+  Leia (nUm);
+  LEIA (NuM);
+  se (num>=nUm) e (num>=NuM) entao
+    maior <- num;
+  senao 
+  SE (nUm>=num) E (nUm>=NuM) ENTAO
+    MAIOR <- nUm;
+  SENAO
+    Maior <- NuM;
+  Fim_Se  
+  Imprima ("Maior = ");
+  IMPRIMA (Maior);
+  NuM <-    -.12 - +001 - 1234567890 + -.0 - +0. - 12345.67890 ;
+  nUm<--.12-+001-1234567890+-.0-+0.-12345.67890;
+  num<-+.;
+  para   de 1ate xpasso1 s/**++*/e  2<3
+  paraide1 ate9passo 1.2.3.<----(***))
+  para i de 1ate 9. 0. passo 1$j
+FIM

@@ -1,0 +1,20 @@
+// Comentário 1 
+// Comentário 2 //
+/* Comentário 3 
+/* Comentário 4 */
+(* Comentário 5 *)
+
+início
+  int: x, y, z;  /* Declaração de variáveis
+  (* Esse tipo de dado é válido?? *) decimal: média;
+  imprima ("Digite um valor para x:");
+  leia (x);
+  imprima("Digite um valor para y:");
+  leia(y);
+  imprima ("Digite um valor para z:");
+  leia (z);
+  media <- (x+y+z)*0.33333;
+  imprima ("Média = ");
+  imprima   (média);
+  imprima    ("\n");
+fim
