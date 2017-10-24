@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 
+
 //#include "Codigo/tokens.h"
 //#include "Codigo/automato.h"
 //#include "Codigo/erros.h"
@@ -11,12 +12,15 @@
 
 
 #define TOTAL_CLASSES_CARACTERES 21
-//#define QUANTIDADE_DE_TOKENS 41
-//#define TAMANHO_DO_MAIOR_NOME_TOKEN 15
 #define QUANTIDADE_DE_ESTADOS 45
 #define LIMITE_INICIAL_DE_ALOCACAO 256
+//#define QUANTIDADE_DE_TOKENS 41
+//#define TAMANHO_DO_MAIOR_NOME_TOKEN 15
+//#define NUMERO_PRIMO_DO_HASH ...
 
 
+
+///Definicao de Tipos (ENUM) - Tokens, Classe de carcteres, Erros
 typedef enum {
 	tk_EOF,
 	tk_IDEN,
@@ -94,16 +98,31 @@ typedef enum{
 } tErro;
 
 
+
+///Definicao de Estruturas - String, Lexema (int, dec e cadeia), ???PAR linha e coluna???, ???Atributos da tabela de simbolos???,
+///Identificador de Erros Lexicos, Lista de erros lexicos, Identificador de token, Lista de tokens
 typedef struct{
 	int tamanho_string;
 	int limite_string;
 	char * string;
 } tSring;
 
-typedef struct{ //nao uso ainda
+typedef union{ //nao uso ainda . PODE SER STRUCT
+	int lexema_inteiro;
+	float lexema_decimal;
+	char * lexema_cadeia;
+} tLexema;
+
+typedef struct par{ //nao uso ainda . PODE NAO EXISTIR
+	int LIN, COL;
+	//struct par * prox;
+} tpar;
+
+typedef struct{ //nao uso ainda . PODE SER DIFERENTE
 	int COD;
-	//LEXEMA - Pode ser int, float ou char*
-	//ocorrencias(LIN, COL)
+	tLexema LEXEMA; //LEXEMA - Pode ser int, float ou char*
+	//tpar * ocorrencias; //ocorrencias(LIN, COL)
+	//int ordem_na_entrada; //+ mecanismo que conecte, para cada par token-lexema, a ordem em que ele ocorre na entrada e sua posição na tabela de símbolos ??
 } tSimbolos;
 
 typedef struct{
@@ -131,8 +150,14 @@ typedef struct{
 } tLista_de_tokens;
 
 
-//tabela de simbolos HASH
-//combinação token–lexema (tSimblos) incluida uma única vez na tabela
+
+///Tabela Hash - Definicao
+//tabela de simbolos HASH //combinação token–lexema (tSimblos) incluida uma única vez na tabela
+//Código hash h1: Soma de componentes
+//Funçao de compressão h2: Divisão por primo
+//h(x) = h2 (h1 (x))
+//Colisao: endereçamento aberto por Hash duplo
+
 
 
 ///PROTOTIPOS
@@ -151,13 +176,12 @@ void iniciar_Lista_De_Erros(void);
 void iniciar_Lista_De_Tokens(void);
 void adicionar_Erro_Na_Lista_De_Erros(const tErro, const char, const int, const int);
 void adicionar_Token_Na_Lista_De_Tokens(const tToken, const int, const int); //+int posisao_na_tabela_de_simbolos;
-//void adiconar_Na_Tabela_De_Simbolos(); //Inteiro, decimal ou cadeia
+void adiconar_Na_Tabela_De_Simbolos(tToken); //Inteiro, decimal ou cadeia (FAZER)
 const char * obter_Nome_Do_Token(tToken);
 const char * obter_Nome_Do_Erro(tErro id_token);
-int imprimir_Linha(void);
-void imprimir_seta(int n);
+int imprimir_Linha(FILE *);
+void imprimir_seta(FILE *, int n);
 void imprimir_Lista_De_Erros_Lexicos(const char*);
-
 //imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo();
 //imprimir_Tabela_De_Simbolos();
 
@@ -194,15 +218,16 @@ int main (int argc, char *argv[]){
 			printf("\n");
 		}*/
 		
-		for (int i=1; i < argc; i++){
+		/// Roda os arquivos que digitei na entrada
+		for (int i=1; i < argc; i++){ 
 			printf("\nArquivo : %s \n", argv[i]);
-			caminho = (char *) malloc(10 + strlen(argv[i])); // Alocação para o nome do caminho do arquivo
-			sprintf(caminho,"./Testes/%s", argv[i]); // O arquivo esta na pasta testes
+			caminho = (char *) malloc(10 + strlen(argv[i])); // Alocação para o caminho do arquivo
+			sprintf(caminho,"./Testes/%s", argv[i]); // O arquivo está na pasta testes
 			
 			if ((arquivo_de_entrada = fopen(caminho, "r")) == NULL){
 				printf("Erro ao abrir o arquivo!!! \nPor favor, verifique a existencia do mesmo na pasta 'Testes' e tente novamente.\n");
 			} else {
-				///Iniciando listas com os tokens e erros
+				///Iniciando listas de tokens e erros
 				iniciar_Lista_De_Erros();
 				iniciar_Lista_De_Tokens();
 				
@@ -214,7 +239,7 @@ int main (int argc, char *argv[]){
 				} while(token_da_vez != tk_EOF);
 
 				
-				//imprimir_Lista_De_Erros_Lexicos(argv[i]);
+				imprimir_Lista_De_Erros_Lexicos(argv[i]);
 				//imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo();
 				//imprimir_Tabela_De_Simbolos();
 				
@@ -224,6 +249,7 @@ int main (int argc, char *argv[]){
 				printf("   %s.tok com o conteúdo da tabela de símbolos após processamento.\n\n", argv[1]);
 				
 				///Liberando Memoria
+				free(caminho);
 				free(lista_de_erros.id_erro);
 				free(lista_de_tokens.id_token);
 				
@@ -262,7 +288,7 @@ tToken analizador_Lexico(void){
 				retroceder_Caracteres(1, prox_Simb);
 				id_token = identificar_Token();
 				if (id_token == -1){ //Identificador
-					//Adiconar identificador na tabela de simbolos (FAZER)
+					adiconar_Na_Tabela_De_Simbolos(tk_IDEN);
 					return (tk_IDEN);
 				} else { //Palavra reservada
 					return (id_token);
@@ -275,14 +301,14 @@ tToken analizador_Lexico(void){
 
 			case 4: /// Estado Digito Inteiro (FINAL)
 				retroceder_Caracteres(1, prox_Simb);
-				//Adicionar inteiro na tabela de simbolos (FAZER)
+				adiconar_Na_Tabela_De_Simbolos(tk_INTEIRO);
 				return (tk_INTEIRO);
 				break;
 				
 			case 5: ///Estado de erro lexico apos inteiro (FINAL)
 				retroceder_Caracteres(1, prox_Simb);
 				adicionar_Erro_Na_Lista_De_Erros(er_delimitador_esperado, prox_Simb, linha_arquivo, coluna_arquivo);
-				//Adicionar inteiro na tabela de simbolos (FAZER)
+				adiconar_Na_Tabela_De_Simbolos(tk_INTEIRO);
 				return (tk_INTEIRO);
 				break;
 				
@@ -292,14 +318,14 @@ tToken analizador_Lexico(void){
 				
 			case 7: /// Estado Digito Decimal (FINAL)
 				retroceder_Caracteres(1, prox_Simb);
-				//Adicionar Decimal na tabela de simbolos (FAZER)
+				adiconar_Na_Tabela_De_Simbolos(tk_DECIMAL);
 				return (tk_DECIMAL);
 				break;
 
 			case 8: ///Estado de erro lexico apos decimal (FINAL)
 				retroceder_Caracteres(1, prox_Simb);
 				adicionar_Erro_Na_Lista_De_Erros(er_delimitador_esperado, prox_Simb, linha_arquivo, coluna_arquivo);
-				//Adicionar Decimal na tabela de simbolos (FAZER)
+				adiconar_Na_Tabela_De_Simbolos(tk_DECIMAL);
 				return (tk_DECIMAL);
 				break;
 			
@@ -319,14 +345,14 @@ tToken analizador_Lexico(void){
 
 			case 12: ///Estado Cadeia (FINAL)
 				inserir_Caractere_No_Lexema(prox_Simb);
-				//Adiciona cadeia na tabela de simbolos (FAZER)
+				adiconar_Na_Tabela_De_Simbolos(tk_CADEIA);
 				return (tk_CADEIA);
 				break;
 			
 			case 13: ///Estado de erro lexico nao fechameno da cadeia (FINAL)
 				retroceder_Caracteres(1, prox_Simb);
 				adicionar_Erro_Na_Lista_De_Erros(er_cadeia_nao_fechada, prox_Simb, linha_arquivo, coluna_arquivo);
-				//Adiciona cadeia na tabela de simbolos (FAZER)
+				adiconar_Na_Tabela_De_Simbolos(tk_CADEIA);
 				return (tk_CADEIA);
 				break;
 
@@ -521,8 +547,8 @@ void iniciar_Tabela_Transicoes (void){
 
 
 char ler_Proximo_Caractere(void){
-	char prox_Simb = getc(arquivo_de_entrada);
-	coluna_arquivo++;
+	char prox_Simb = getc(arquivo_de_entrada); //Obtem caractere do arquivo
+	coluna_arquivo++; //Nova linha
 	if(prox_Simb == '\n'){ // Se o caracter for uma quebra de linha: Novos valores para linha e coluna
 		linha_arquivo++;
 		coluna_arquivo = 1;
@@ -532,16 +558,17 @@ char ler_Proximo_Caractere(void){
 
 
 void retroceder_Caracteres(const int n, const char prox_Simb){
-	fseek(arquivo_de_entrada, -n*sizeof(char), SEEK_CUR);
-	coluna_arquivo -= n; 
+	fseek(arquivo_de_entrada, -n*sizeof(char), SEEK_CUR); //Retocede n caracteres
+	coluna_arquivo -= n; //Diminui o numero de caracteres da coluna
 	if (prox_Simb == '\n') //Isso nao influencia na coluna, uma vez que o prox a ser lido será '\n, o valor da coluna é zerado
 		linha_arquivo--;
-	if (prox_Simb == EOF) //Tratamento de EOF
+	if (prox_Simb == EOF) //Tratamento de EOF (que nao é considerado no fseek)
 		fseek(arquivo_de_entrada, 1, SEEK_CUR);
 }
 
 
 tClasse_caractere carctere_2_tClasse_caractere(const char prox_Simb){
+	//Funcao Responsavel pr converter o carctere lido em uma classe de simbolos (indice) da tabela de transissoes
 	if (isalpha(prox_Simb))	return tc_letra;
 	if (isdigit(prox_Simb))	return tc_digito;
 	if (prox_Simb == '\n')	return tc_quebra_linha;
@@ -569,6 +596,7 @@ tClasse_caractere carctere_2_tClasse_caractere(const char prox_Simb){
 
 
 void iniciar_Lexema(void){
+	//Define tamanho do lexema como zero (vazio) e tamanho maximo permitido para a insersao de caracteres, esse tamanho maximo pode ser alterado posteriormente
 	lexema.limite_string = LIMITE_INICIAL_DE_ALOCACAO;
 	lexema.tamanho_string = 0;
 	lexema.string = (char*) malloc(lexema.limite_string * sizeof(char));
@@ -581,6 +609,7 @@ void iniciar_Lexema(void){
 
 
 void realocar_Lexema(void){
+	//Ao atingir o tamanho maximo, é nescessario realocar o tamanho da string do lexema, essa funcao é responsavel por isso
 	lexema.limite_string *= 2;
 	lexema.string = (char*) realloc (lexema.string, lexema.limite_string * sizeof(char));
 	if (lexema.string == NULL){
@@ -591,13 +620,15 @@ void realocar_Lexema(void){
 
 
 void reiniciar_Lexema(void){
+	//Define tamanho do lexema como zero, se tornando uma string vazia
 	lexema.tamanho_string = 0;
     lexema.string[0] = '\0';
 }
 
 
 void inserir_Caractere_No_Lexema(char prox_Simb){
-	if (lexema.tamanho_string == (lexema.limite_string - 2))
+	//O nome da funcao é auto-explicativa
+	if (lexema.tamanho_string == (lexema.limite_string - 2)) //Ao atingir o tamanho maximo, é nescessario realocar o tamanho da string do lexema
 		realocar_Lexema();
 	lexema.string[lexema.tamanho_string] = prox_Simb;
 	lexema.tamanho_string++;
@@ -606,15 +637,19 @@ void inserir_Caractere_No_Lexema(char prox_Simb){
 
 
 int identificar_Token(void){
+	//Ao encontrar uma palavra qualque, verifique se é palavra reservada com uma função que retorna o código da palavra reservada
+	//ou –1 se o identificador não for palavra reservada.
+	//Tal função deve conhecer as palavras reservadas da linguagem.
 	const char * palavras_reservadas[] = {"inicio", "fim", "int", "dec", "leia", "imprima", "para", "de", "ate",
 										  "passo", "fim_para", "se", "entao", "senao", "fim_se", "e", "ou", "nao"};
+										  
 	char * aux = (char *) malloc(lexema.tamanho_string * sizeof(char));
-	strcpy(aux, lexema.string);
+	strcpy(aux, lexema.string); //Auxiliar, Letras maiúsculas e minúsculas são distinguidas em nomes de identificadoresm, mas, é nescessario observar o que vem a seguir:
 
-	for(int i = 0; i < strlen(aux); i++) // Torna todas as letras minusculas
+	for(int i = 0; i < strlen(aux); i++) // Torna todas as letras minusculas Letras maiúsculas e minúsculas nao são distinguidas em palavras reservadas
 		aux[i] = tolower(aux[i]);
-	
-	for(int i = 0; i < 18; i++) {
+		
+	for(int i = 0; i < 18; i++) { //18 = numero de palavras_reservadas
 		if(strcmp(aux, palavras_reservadas[i]) == 0)
 			return (i + tk_inicio);
 	}
@@ -624,6 +659,7 @@ int identificar_Token(void){
 
 
 void retroceder_Ate(const int n, const int linha, const int coluna){
+	//Similar a funcao retroceder_Caracteres, mas lida com um alcance muito maior para o valor de n
 	fseek(arquivo_de_entrada, (-1)*n*sizeof(char), SEEK_CUR);
 	linha_arquivo = linha;
 	coluna_arquivo = coluna;
@@ -631,6 +667,7 @@ void retroceder_Ate(const int n, const int linha, const int coluna){
 
 
 void iniciar_Lista_De_Erros(void){
+	//Define tamanho da lista de erros como zero (vazio) e tamanho maximo permitido para a insersao de erros, esse tamanho maximo pode ser alterado posteriormente
 	lista_de_erros.tamanho_lista = 0;
 	lista_de_erros.limite_lista = LIMITE_INICIAL_DE_ALOCACAO;
 	lista_de_erros.id_erro = (tIndentificador_De_Erro *) malloc (lista_de_erros.limite_lista * sizeof(tIndentificador_De_Erro));
@@ -642,6 +679,7 @@ void iniciar_Lista_De_Erros(void){
 
 
 void iniciar_Lista_De_Tokens(void){
+	//Define tamanho da lista de tokens reconhecidos e suas ocorrencias como zero (vazio) e tamanho maximo permitido para a insersao, esse tamanho maximo pode ser alterado posteriormente
 	lista_de_tokens.tamanho_lista = 0;
 	lista_de_tokens.limite_lista = LIMITE_INICIAL_DE_ALOCACAO;
 	lista_de_tokens.id_token = (tIndentificador_De_Token *) malloc (lista_de_tokens.limite_lista * sizeof(tIndentificador_De_Token));
@@ -653,14 +691,14 @@ void iniciar_Lista_De_Tokens(void){
 
 
 void adicionar_Erro_Na_Lista_De_Erros(const tErro erro, const char c, const int linha, const int coluna){
-	///Setar o erro
+	//Setar o erro
 	lista_de_erros.id_erro[lista_de_erros.tamanho_lista].LIN = linha;
 	lista_de_erros.id_erro[lista_de_erros.tamanho_lista].COL = coluna;
 	lista_de_erros.id_erro[lista_de_erros.tamanho_lista].ERRO = erro;
 	lista_de_erros.id_erro[lista_de_erros.tamanho_lista].CARACTER = c;
 	lista_de_erros.tamanho_lista++;
 	
-	///Verificando tamanho da alocacao
+	//Verificar tamanho da alocacao
 	if (lista_de_erros.tamanho_lista  == lista_de_erros.limite_lista-1){
 		lista_de_erros.limite_lista *= 2;
 		lista_de_erros.id_erro = (tIndentificador_De_Erro *) realloc(lista_de_erros.id_erro, lista_de_erros.limite_lista * sizeof(tIndentificador_De_Erro));
@@ -672,14 +710,14 @@ void adicionar_Erro_Na_Lista_De_Erros(const tErro erro, const char c, const int 
 }
 
 
-void adicionar_Token_Na_Lista_De_Tokens(const tToken token, const int linha, const int coluna){ //+int posisao_na_tabela_de_simbolos;
-	///Adicionar token
+void adicionar_Token_Na_Lista_De_Tokens(const tToken token, const int linha, const int coluna){ //+posisao_na_tabela_de_simbolos;
+	//Adicionar token
 	lista_de_tokens.id_token[lista_de_tokens.tamanho_lista].LIN = linha;
 	lista_de_tokens.id_token[lista_de_tokens.tamanho_lista].COL = coluna;
 	lista_de_tokens.id_token[lista_de_tokens.tamanho_lista].TOKEN = token;
 	lista_de_tokens.tamanho_lista++;
 	
-	///Verificando tamanho da alocacao
+	//Verificar tamanho da alocacao
 	if (lista_de_tokens.tamanho_lista  == lista_de_tokens.limite_lista-1){
 		lista_de_tokens.limite_lista *= 2;
 		lista_de_tokens.id_token = (tIndentificador_De_Token *) realloc(lista_de_tokens.id_token, lista_de_tokens.limite_lista * sizeof(tIndentificador_De_Token));
@@ -688,6 +726,11 @@ void adicionar_Token_Na_Lista_De_Tokens(const tToken token, const int linha, con
 			exit(-1);
 		}
 	}
+}
+
+
+void adiconar_Na_Tabela_De_Simbolos(tToken tk){ //FAZER
+	return;
 }
 
 
@@ -751,51 +794,66 @@ const char * obter_Nome_Do_Erro(tErro id_token){
 }
 
 
-int imprimir_Linha(void){
+int imprimir_Linha(FILE * arquivo_de_saida){
+	//Usada durante a impressao de erros lexicos para a entrada portugol
+	//Essa funcao é responsavel por imprimir em arquivo uma linha do aquivo texto
 	int carcteres_na_linha = 0;
 	char prox_Simb = ' ';
 	while (prox_Simb != '\n' && prox_Simb != EOF){
-		printf("%c", prox_Simb);
+		fprintf(arquivo_de_saida, "%c", prox_Simb);
 		prox_Simb = ler_Proximo_Caractere();
 		carcteres_na_linha++;
 	}
-	printf("\n");
+	fprintf(arquivo_de_saida, "\n");
 	return carcteres_na_linha;
 }
 
 
-void imprimir_seta(int n){
-	printf("       ");
+void imprimir_seta(FILE * arquivo_de_saida, int n){
+	//Essa funcao é responsavel por imprimir em arquivo uma seta indicando um erro lexico em uma determinada linha
+	fprintf(arquivo_de_saida, "       ");
 	for (int i=0; i<n-1; i++)
-		printf("-");
-	printf("^\n");
+		fprintf(arquivo_de_saida, "-");
+	fprintf(arquivo_de_saida, "^\n");
 }
 
 
-void imprimir_Lista_De_Erros_Lexicos(const char* nomeArquivo){
+void imprimir_Lista_De_Erros_Lexicos(const char* nomeArquivoEntrada){
 	int carcteres_na_linha = -1, i = 0; //Variaveis
-	
-	//CRIAR ARQUIVO DE SAIDA (FAZER)
+	FILE *arquivo_de_saida;
+	char * nome_arquivo;
 	
 	rewind(arquivo_de_entrada); //Voltar ao inico do arquivo
 	linha_arquivo = coluna_arquivo = 1; //Zerar linha e coluna
 	
-	printf("LISTA DE ERROS LEXICOS EM \"%s\" \n\n", nomeArquivo);
-	while(!feof(arquivo_de_entrada)){
-		printf("[%4d]", linha_arquivo);
-		carcteres_na_linha = imprimir_Linha();
-		if (lista_de_erros.id_erro[i].LIN == linha_arquivo-1){
-			imprimir_seta(lista_de_erros.id_erro[i].COL);
-			if (lista_de_erros.id_erro[i].ERRO == er_caracter_invalido)
-				printf("       Erro lexico na linha %d coluna %d: %s '%c'\n", lista_de_erros.id_erro[i].LIN, lista_de_erros.id_erro[i].COL, obter_Nome_Do_Erro(lista_de_erros.id_erro[i].ERRO), lista_de_erros.id_erro[i].CARACTER);
-			else
-				printf("       Erro lexico na linha %d coluna %d: %s \n", lista_de_erros.id_erro[i].LIN, lista_de_erros.id_erro[i].COL, obter_Nome_Do_Erro(lista_de_erros.id_erro[i].ERRO));
-			i++;
-			if (lista_de_erros.id_erro[i].LIN == linha_arquivo-1)
-				retroceder_Caracteres(carcteres_na_linha, '\n');
-		}
-	}
+	nome_arquivo = (char *) malloc(4 + strlen(nomeArquivoEntrada)); // Alocação para o nome do arquivo
+	sprintf(nome_arquivo,"%s.err", nomeArquivoEntrada); // O arquivo esta na pasta testes
 	
-	printf("\nTOTAL DE ERROS: %d\n\n", lista_de_erros.tamanho_lista);
+	if ((arquivo_de_saida = fopen(nome_arquivo, "w")) == NULL){
+		//Erro ao abrir o arquivo
+		printf("Erro ao abrir o arquivo para a saida de erros lexicos!!!\n");
+	} else {
+		//Inserindo dados no arquivo
+		fprintf(arquivo_de_saida, "LISTA DE ERROS LEXICOS EM \"%s\" \n\n", nomeArquivoEntrada);
+		while(!feof(arquivo_de_entrada)){
+			fprintf(arquivo_de_saida, "[%4d]", linha_arquivo);
+			carcteres_na_linha = imprimir_Linha(arquivo_de_saida);
+			if (lista_de_erros.id_erro[i].LIN == linha_arquivo-1){
+				imprimir_seta(arquivo_de_saida, lista_de_erros.id_erro[i].COL);
+				if (lista_de_erros.id_erro[i].ERRO == er_caracter_invalido)
+					fprintf(arquivo_de_saida, "       Erro lexico na linha %d coluna %d: %s '%c'\n", lista_de_erros.id_erro[i].LIN, lista_de_erros.id_erro[i].COL, obter_Nome_Do_Erro(lista_de_erros.id_erro[i].ERRO), lista_de_erros.id_erro[i].CARACTER);
+				else
+					fprintf(arquivo_de_saida, "       Erro lexico na linha %d coluna %d: %s \n", lista_de_erros.id_erro[i].LIN, lista_de_erros.id_erro[i].COL, obter_Nome_Do_Erro(lista_de_erros.id_erro[i].ERRO));
+				i++;
+				if (lista_de_erros.id_erro[i].LIN == linha_arquivo-1)
+					retroceder_Caracteres(carcteres_na_linha, '\n');
+			}
+		}
+		
+		fprintf(arquivo_de_saida, "\nTOTAL DE ERROS: %d\n\n", lista_de_erros.tamanho_lista);
+		//Fechando arquivo de saida e liberando memoria alocada
+		fclose(arquivo_de_saida);
+		free(nome_arquivo);
+	}
 }
 
