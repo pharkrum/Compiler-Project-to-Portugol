@@ -1,3 +1,5 @@
+//Automato desenho: erro no estado ) -> Branco e \n
+//					erro no estado 23 -> 42 e nao para o estado 0
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -99,7 +101,7 @@ typedef enum{
 
 
 
-///Definicao de Estruturas - String, Lexema (int, dec e cadeia), ???PAR linha e coluna???, ???Atributos da tabela de simbolos???,
+///Definicao de Estruturas - String, Lexema (int, dec e cadeia), PAR linha e coluna, Atributos da tabela de simbolos,
 ///Identificador de Erros Lexicos, Lista de erros lexicos, Identificador de token, Lista de tokens
 typedef struct{
 	int tamanho_string;
@@ -107,22 +109,19 @@ typedef struct{
 	char * string;
 } tSring;
 
-typedef union{ //nao uso ainda . PODE SER STRUCT
+typedef struct{ //nao uso ainda
+	int LIN, COL;
+} tPos;
+
+typedef struct simbolo{ //nao uso ainda
+	tToken COD;
+	char * lexema_cadeia;
 	int lexema_inteiro;
 	float lexema_decimal;
-	char * lexema_cadeia;
-} tLexema;
-
-typedef struct par{ //nao uso ainda . PODE NAO EXISTIR
-	int LIN, COL;
-	//struct par * prox;
-} tpar;
-
-typedef struct{ //nao uso ainda . PODE SER DIFERENTE
-	int COD;
-	tLexema LEXEMA; //LEXEMA - Pode ser int, float ou char*
-	//tpar * ocorrencias; //ocorrencias(LIN, COL)
-	//int ordem_na_entrada; //+ mecanismo que conecte, para cada par token-lexema, a ordem em que ele ocorre na entrada e sua posição na tabela de símbolos ??
+	tPos *ocorrencias; //ocorrencias(LIN, COL)
+	size_t tamanho_ocorrencias;
+	int limite_ocorrencias;
+	//struct simbolo *prox;//ponteiro pro proximo
 } tSimbolos;
 
 typedef struct{
@@ -147,17 +146,21 @@ typedef struct{
 	int tamanho_lista;
 	int limite_lista;
 	tIndentificador_De_Token * id_token;
+	int posisao_na_tabela_de_simbolos;
 } tLista_de_tokens;
 
 
 
 ///Tabela Hash - Definicao
+//array de ponteiros (iniciada com null)
 //tabela de simbolos HASH //combinação token–lexema (tSimblos) incluida uma única vez na tabela
-//Código hash h1: Soma de componentes
-//Funçao de compressão h2: Divisão por primo
-//h(x) = h2 (h1 (x))
-//Colisao: endereçamento aberto por Hash duplo
+//Hash com shift % numero (primo - 139)
+//Colisao: endereçamento separado
+//Insersao no inicio
 
+//+ mecanismo que conecte, para cada par token-lexema, a ordem em que ele ocorre na entrada e sua posição na tabela de símbolos
+//Pode criar um aary lin, col, poteiro p posicao na tabela de simbolos, a unica nescessidade dele é imprimir na ordem
+//fazer o sort
 
 
 ///PROTOTIPOS
