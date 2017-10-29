@@ -1,5 +1,11 @@
+// A FAZER Philiphe:
+// imprime ocorrencias, imprime tabela e realloc de ocorrencias
 //Automato desenho: erro no estado ) -> Branco e \n
 //					erro no estado 23 -> 42 e nao para o estado 0
+// preciso aprender: concatenar strings e formatos de impressão
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -16,9 +22,10 @@
 #define TOTAL_CLASSES_CARACTERES 21
 #define QUANTIDADE_DE_ESTADOS 45
 #define LIMITE_INICIAL_DE_ALOCACAO 256
+#define TAM_TAB_HASH_SIMBOLOS 139
+#define hash(v) ((2*v) + 3) mod 139 //Multiplique, Adicione e Divida (MAD) (slide)
 //#define QUANTIDADE_DE_TOKENS 41
 //#define TAMANHO_DO_MAIOR_NOME_TOKEN 15
-//#define NUMERO_PRIMO_DO_HASH ...
 
 
 
@@ -108,12 +115,12 @@ typedef struct{
 	int limite_string;
 	char * string;
 } tSring;
-
+//////////////////////////////////
 typedef struct{ //nao uso ainda
 	int LIN, COL;
 } tPos;
 
-typedef struct simbolo{ //nao uso ainda
+typedef struct{ //nao uso ainda
 	tToken COD;
 	char * lexema_cadeia;
 	int lexema_inteiro;
@@ -121,9 +128,12 @@ typedef struct simbolo{ //nao uso ainda
 	tPos *ocorrencias; //ocorrencias(LIN, COL)
 	size_t tamanho_ocorrencias;
 	int limite_ocorrencias;
+	int pos_livre_em_ocorrencias;
+	int ordem_de_entrada; //primeiro olha a ordem de entrada depois percorre as ocorrencias.
+	tSimbolo proximo;
 	//struct simbolo *prox;//ponteiro pro proximo
-} tSimbolos;
-
+} tSimbolo;
+//////////////////////////////////
 typedef struct{
 	int LIN, COL;
 	tErro ERRO;
@@ -173,20 +183,27 @@ void iniciar_Lexema(void);
 void realocar_Lexema(void);
 void reiniciar_Lexema(void);
 void inserir_Caractere_No_Lexema(char);
-int identificar_Token(void);
+int  identificar_Token(void);
 void retroceder_Ate(const int, const int, const int);
 void iniciar_Lista_De_Erros(void);
 void iniciar_Lista_De_Tokens(void);
 void adicionar_Erro_Na_Lista_De_Erros(const tErro, const char, const int, const int);
 void adicionar_Token_Na_Lista_De_Tokens(const tToken, const int, const int); //+int posisao_na_tabela_de_simbolos;
-void adiconar_Na_Tabela_De_Simbolos(tToken); //Inteiro, decimal ou cadeia (FAZER)
+
 const char * obter_Nome_Do_Token(tToken);
 const char * obter_Nome_Do_Erro(tErro id_token);
 int imprimir_Linha(FILE *);
 void imprimir_seta(FILE *, int n);
 void imprimir_Lista_De_Erros_Lexicos(const char*);
 //imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo();
-//imprimir_Tabela_De_Simbolos();
+
+
+void void iniciar_Tabela_de_Simbolos(void);
+void adiciona_ocorrencia(tToken);
+void adiconar_na_tabela_de_simbolos(tToken);
+tSimbolo buscar_token_na_tabela_de_simbolos(tToken);
+void imprimir_tabela_de_simbolos(void);
+char * imprimir_ocorrencias(tSimbolo);
 
 
 
@@ -197,7 +214,8 @@ int linha_arquivo = 1, coluna_arquivo = 1, linha_token, coluna_token;
 tSring lexema;
 tLista_de_erros lista_de_erros;
 tLista_de_tokens lista_de_tokens;
-
+tSimbolo *tab_simbolos;
+int tab_simb_count = 0;
 
 
 
@@ -291,7 +309,7 @@ tToken analizador_Lexico(void){
 				retroceder_Caracteres(1, prox_Simb);
 				id_token = identificar_Token();
 				if (id_token == -1){ //Identificador
-					adiconar_Na_Tabela_De_Simbolos(tk_IDEN);
+					adiconar_na_tabela_de_simbolos(tk_IDEN);
 					return (tk_IDEN);
 				} else { //Palavra reservada
 					return (id_token);
@@ -304,14 +322,14 @@ tToken analizador_Lexico(void){
 
 			case 4: /// Estado Digito Inteiro (FINAL)
 				retroceder_Caracteres(1, prox_Simb);
-				adiconar_Na_Tabela_De_Simbolos(tk_INTEIRO);
+				adiconar_na_tabela_de_simbolos(tk_INTEIRO);
 				return (tk_INTEIRO);
 				break;
 				
 			case 5: ///Estado de erro lexico apos inteiro (FINAL)
 				retroceder_Caracteres(1, prox_Simb);
 				adicionar_Erro_Na_Lista_De_Erros(er_delimitador_esperado, prox_Simb, linha_arquivo, coluna_arquivo);
-				adiconar_Na_Tabela_De_Simbolos(tk_INTEIRO);
+				adiconar_na_tabela_de_simbolos(tk_INTEIRO);
 				return (tk_INTEIRO);
 				break;
 				
@@ -321,14 +339,14 @@ tToken analizador_Lexico(void){
 				
 			case 7: /// Estado Digito Decimal (FINAL)
 				retroceder_Caracteres(1, prox_Simb);
-				adiconar_Na_Tabela_De_Simbolos(tk_DECIMAL);
+				adiconar_na_tabela_de_simbolos(tk_DECIMAL);
 				return (tk_DECIMAL);
 				break;
 
 			case 8: ///Estado de erro lexico apos decimal (FINAL)
 				retroceder_Caracteres(1, prox_Simb);
 				adicionar_Erro_Na_Lista_De_Erros(er_delimitador_esperado, prox_Simb, linha_arquivo, coluna_arquivo);
-				adiconar_Na_Tabela_De_Simbolos(tk_DECIMAL);
+				adiconar_na_tabela_de_simbolos(tk_DECIMAL);
 				return (tk_DECIMAL);
 				break;
 			
@@ -348,14 +366,14 @@ tToken analizador_Lexico(void){
 
 			case 12: ///Estado Cadeia (FINAL)
 				inserir_Caractere_No_Lexema(prox_Simb);
-				adiconar_Na_Tabela_De_Simbolos(tk_CADEIA);
+				adiconar_na_tabela_de_simbolos(tk_CADEIA);
 				return (tk_CADEIA);
 				break;
 			
 			case 13: ///Estado de erro lexico nao fechameno da cadeia (FINAL)
 				retroceder_Caracteres(1, prox_Simb);
 				adicionar_Erro_Na_Lista_De_Erros(er_cadeia_nao_fechada, prox_Simb, linha_arquivo, coluna_arquivo);
-				adiconar_Na_Tabela_De_Simbolos(tk_CADEIA);
+				adiconar_na_tabela_de_simbolos(tk_CADEIA);
 				return (tk_CADEIA);
 				break;
 
@@ -640,7 +658,7 @@ void inserir_Caractere_No_Lexema(char prox_Simb){
 
 
 int identificar_Token(void){
-	//Ao encontrar uma palavra qualque, verifique se é palavra reservada com uma função que retorna o código da palavra reservada
+	//Ao encontrar uma palavra qualquer, verifique se é palavra reservada com uma função que retorna o código da palavra reservada
 	//ou –1 se o identificador não for palavra reservada.
 	//Tal função deve conhecer as palavras reservadas da linguagem.
 	const char * palavras_reservadas[] = {"inicio", "fim", "int", "dec", "leia", "imprima", "para", "de", "ate",
@@ -692,6 +710,116 @@ void iniciar_Lista_De_Tokens(void){
     }
 }
 
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+//Funções da tabela de simbolos
+
+void iniciar_Tabela_de_Simbolos(void){
+	//inicia a tabela de simbolos com tamanho máximo do numero primo definido
+	tab_simbolos = (tSimbolo *)malloc(TAM_TAB_HASH_SIMBOLOS * sizeof(tSimbolo));
+	if (tab_simbolos == NULL)
+	{
+		printf("Erro durante a alocacao da tabela de simbolos!!!\n");
+        exit(-1);
+	}
+	int i;
+	//Inicia todas as posições com null
+	for (i = 0; i < TAM_TAB_HASH_SIMBOLOS; i++) 
+      tab_simbolos[i] = NULL; 
+}
+
+void adiconar_na_tabela_de_simbolos(tToken tk){
+	if(buscar_token_na_tabela_de_simbolos(tk) != NULL){ // se o token já está instalado na tab simbolos
+		adiciona_ocorrencia(tk);
+	}
+	else{ ///////////ainda não adiciona tudo que tinha que adicionar
+		int pos;
+		pos = hash((int)lexema); // a ideia é pegar a cadeia toda e converter para inteiro
+		tSimbolo simb = malloc(sizeof (tSimbolo));
+		simb.COD = tk;
+		simb.lexema_cadeia = lexema;
+		if (tk == tk_int)
+			simb.lexema_inteiro = (int)lexema;
+		else if (tk == tk_dec)
+			simb.lexema_decimal = (float)lexema;
+
+		tpos token_pos;
+		token_pos.LIN = linha_token;
+		token_pos.COL = coluna_token;
+
+		simb.ocorrencias = (tpos *)malloc(LIMITE_INICIAL_DE_ALOCACAO * sizeof(tPos));
+		simb.ocorrencias[0] = token_pos; //sempre é a primeira ocorrência
+		simb.tamanho_ocorrencias = 1;
+		simb.limite_ocorrencias = LIMITE_INICIAL_DE_ALOCACAO; /// fazer o realloc caso passe
+		simb.pos_livre_em_ocorrencias = 1;	
+		simb.ordem_de_entrada = tab_simb_count;
+		tab_simb_count++; 
+
+		simb.proximo = tabSimbolos[pos]; //seta null
+		tabSimbolos[pos] = simb; //add na hash
+	}
+}
+
+void adiciona_ocorrencia(tToken tk){
+	tSimbolo simb;
+	simb = buscar_token_na_tabela_de_simbolos(tk);
+	tpos token_pos;
+	token_pos.LIN = linha_token;
+	token_pos.COL = coluna_token;
+	simb.ocorrencias[simb.pos_livre_em_ocorrencias] = token_pos;
+
+	simb.pos_livre_em_ocorrencias++;
+	simb.tamanho_ocorrencias++;
+	if(simb.tamanho_ocorrencias >= LIMITE_INICIAL_DE_ALOCACAO){
+		//realloc a fazer
+	}
+
+}
+
+tSimbolo buscar_token_na_tabela_de_simbolos(tToken tk){ 
+	int pos;
+	tSimbolo simb;
+	pos = hash((int)lexema);
+	for (simb = tab[h]; simb != NULL; simb = simb.proximo) {
+		if (simb.COD == tk) {
+			return simb;
+		}	
+	}
+   	return NULL;
+}
+/* ainda precisa ser visto
+char * imprimir_ocorrencias(tSimbolo simb){
+	int i;
+	for(i = 0; i < simb.tamanho_ocorrencias; i++){
+		simb.ocorrencias[i].LIN;
+		simb.ocorrencias[i].COL;
+	}	
+}
+
+void imprimir_tabela_de_simbolos(void){
+	printf("TABELA DE SIMBOLOS - ");
+	for(percorre a hash){
+		busca o 1
+		depois busca o 2
+	}
+
+	ou 
+
+	for(ordena a hash pela chave: tab_simb_count)
+
+	printf("%-25s%-20s%-10s%-10s\n", "POS", "TOKEN", "LEXEMA", "POS NA ENTRADA (linha,coluna)"); 
+    printf("%-25s%-20s%-10s%-10s\n", simb.ordem_de_entrada, obter_Nome_Do_Token(simb.COD), simb.lexema_cadeia, imprimir_ocorrencias(simb));
+
+}
+*/
+
+//Funções da tabela de simbolos
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
 
 void adicionar_Erro_Na_Lista_De_Erros(const tErro erro, const char c, const int linha, const int coluna){
 	//Setar o erro
@@ -729,11 +857,6 @@ void adicionar_Token_Na_Lista_De_Tokens(const tToken token, const int linha, con
 			exit(-1);
 		}
 	}
-}
-
-
-void adiconar_Na_Tabela_De_Simbolos(tToken tk){ //FAZER
-	return;
 }
 
 
