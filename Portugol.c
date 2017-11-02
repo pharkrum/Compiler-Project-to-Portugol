@@ -775,7 +775,7 @@ void adiciona_ocorrencia(tToken tk){
 	simb.pos_livre_em_ocorrencias++;
 	simb.tamanho_ocorrencias++;
 	if(simb.tamanho_ocorrencias >= LIMITE_INICIAL_DE_ALOCACAO){
-		simb.ocorrencias = (tPos*) realloc (simb.ocorrencias, LIMITE_INICIAL_DE_ALOCACAO * sizeof(tPos)); // rever
+		simb.ocorrencias = (tPos*) realloc (simb.ocorrencias, LIMITE_INICIAL_DE_ALOCACAO * sizeof(tPos)); // reveja se o limite está de acordo com o que vc pretende.
 	}
 
 }
