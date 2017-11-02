@@ -129,7 +129,7 @@ typedef struct{ //nao uso ainda
 	size_t tamanho_ocorrencias;
 	int limite_ocorrencias;
 	int pos_livre_em_ocorrencias;
-	int ordem_de_entrada; //primeiro olha a ordem de entrada depois percorre as ocorrencias.
+	//int ordem_de_entrada; //primeiro olha a ordem de entrada depois percorre as ocorrencias.
 	tSimbolo proximo;
 	//struct simbolo *prox;//ponteiro pro proximo
 } tSimbolo;
@@ -216,6 +216,7 @@ tLista_de_erros lista_de_erros;
 tLista_de_tokens lista_de_tokens;
 tSimbolo *tab_simbolos;
 int tab_simb_count = 0;
+tSimbolo* ordem_de_entrada;
 
 
 
@@ -754,11 +755,12 @@ void adiconar_na_tabela_de_simbolos(tToken tk){
 		simb.tamanho_ocorrencias = 1;
 		simb.limite_ocorrencias = LIMITE_INICIAL_DE_ALOCACAO; /// fazer o realloc caso passe
 		simb.pos_livre_em_ocorrencias = 1;	
-		simb.ordem_de_entrada = tab_simb_count;
-		tab_simb_count++; 
-
+		//simb.ordem_de_entrada = tab_simb_count;	
 		simb.proximo = tabSimbolos[pos]; //seta null
+		ordem_de_entrada[tab_simb_count] = simb;
+		tab_simb_count++; 
 		tabSimbolos[pos] = simb; //add na hash
+		//acho que tem um problema nesse sistema de próximo
 	}
 }
 
@@ -773,7 +775,7 @@ void adiciona_ocorrencia(tToken tk){
 	simb.pos_livre_em_ocorrencias++;
 	simb.tamanho_ocorrencias++;
 	if(simb.tamanho_ocorrencias >= LIMITE_INICIAL_DE_ALOCACAO){
-		//realloc a fazer
+		simb.ocorrencias = (tPos*) realloc (simb.ocorrencias, LIMITE_INICIAL_DE_ALOCACAO * sizeof(tPos)); // rever
 	}
 
 }
@@ -789,7 +791,7 @@ tSimbolo buscar_token_na_tabela_de_simbolos(tToken tk){
 	}
    	return NULL;
 }
-/* ainda precisa ser visto
+/* ainda precisa ser visto como imprimir as ocorrências
 char * imprimir_ocorrencias(tSimbolo simb){
 	int i;
 	for(i = 0; i < simb.tamanho_ocorrencias; i++){
@@ -797,23 +799,18 @@ char * imprimir_ocorrencias(tSimbolo simb){
 		simb.ocorrencias[i].COL;
 	}	
 }
-
+*/
 void imprimir_tabela_de_simbolos(void){
 	printf("TABELA DE SIMBOLOS - ");
-	for(percorre a hash){
-		busca o 1
-		depois busca o 2
+	int i;
+	for(i=0; i < sizeof(ordem_de_entrada); i++){
+		printf("%-25s%-20s%-10s%-10s\n", "POS", "TOKEN", "LEXEMA", "POS NA ENTRADA (linha,coluna)"); 
+    	printf("%-25s%-20s%-10s%-10s\n", i, obter_Nome_Do_Token(simb.COD), simb.lexema_cadeia, imprimir_ocorrencias(simb));
 	}
-
-	ou 
-
-	for(ordena a hash pela chave: tab_simb_count)
-
-	printf("%-25s%-20s%-10s%-10s\n", "POS", "TOKEN", "LEXEMA", "POS NA ENTRADA (linha,coluna)"); 
-    printf("%-25s%-20s%-10s%-10s\n", simb.ordem_de_entrada, obter_Nome_Do_Token(simb.COD), simb.lexema_cadeia, imprimir_ocorrencias(simb));
-
+	//ou 
+	//for(ordena a hash pela chave: tab_simb_count) NÃO SEI FAZER ORDENAÇÃO EM TABELA HASH
 }
-*/
+
 
 //Funções da tabela de simbolos
 ///////////////////////////////////////
