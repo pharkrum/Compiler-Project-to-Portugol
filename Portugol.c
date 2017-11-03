@@ -111,8 +111,6 @@ typedef struct{
 
 
 ///Tabela Hash + Definicao dos Atributos da tabela de simbolos
-//+ mecanismo que conecte, para cada par token-lexema, a ordem em que ele ocorre na entrada e sua posição na tabela de símbolos
-//Pode criar um aary lin, col, poteiro p posicao na tabela de simbolos, a unica nescessidade dele é imprimir na ordem ou fazer um sort
 typedef struct{
 	int LIN, COL;
 } tPos;
@@ -128,9 +126,16 @@ typedef struct simbolo{
 	int tamanho_ocorrencias;
 	int limite_ocorrencias;
 	
-	int ordem_de_entrada;
 	struct simbolo * proximo; //Colisao: endereçamento separado
 } tSimbolo;
+
+
+///Mecanismo que conecta, para cada par token-lexema, a ordem em que ele ocorre na entrada e sua posição na tabela de símbolos
+typedef struct {
+	int tab_simb_count;
+	int limite_tab_simb_count;
+	tSimbolo** ordem_de_entrada_da_tab_simbolos;
+} tOrdem;
 
 
 ///Definicao de Estruturas - Identificador de Erros Lexicos, Lista de erros lexicos, Identificador de token, Lista de tokens
@@ -154,8 +159,8 @@ typedef struct{
 typedef struct{
 	int tamanho_lista;
 	int limite_lista;
-	tIndentificador_De_Token * id_token;
 	int posisao_na_tabela_de_simbolos;
+	tIndentificador_De_Token * id_token;
 } tLista_de_tokens;
 
 
@@ -181,15 +186,18 @@ const char * obter_Nome_Do_Erro(tErro id_token);
 int imprimir_Linha(FILE *);
 void imprimir_seta(FILE *, int n);
 void imprimir_Lista_De_Erros_Lexicos(const char*);
-//imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo();
 void iniciar_Tabela_de_Simbolos(void);
+void liberar_tabela_simbolos(void);
+void iniciar_ordem_tab(void);
 int hash_com_shift(void);
 void adiconar_na_tabela_de_simbolos(tToken);
 tSimbolo * buscar_na_tabela_de_simbolos(tToken, int);
 void adiciona_ocorrencia(tSimbolo *);
+void imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo(const char*);
+int tamanho_do_maior_nome_token_reconhecido(void);
+int tamanho_do_maior_lexema(void);
 //void imprimir_tabela_de_simbolos(void);
-
-
+//int tamanho_da_maior_qtd_de_ocorrencias();
 
 ///VARIAVEIS
 FILE *arquivo_de_entrada;
@@ -199,10 +207,7 @@ tSring lexema;
 tLista_de_erros lista_de_erros;
 tLista_de_tokens lista_de_tokens;
 tSimbolo ** tab_simbolos;
-
-//int tab_simb_count = 0;
-//tSimbolo** ordem_de_entrada_da_tab_simbolos;
-//limite
+tOrdem ordem_de_entrada;
 
 
 ///FUNCAO PRINCIPAL
@@ -229,6 +234,7 @@ int main (int argc, char *argv[]){
 				iniciar_Lista_De_Erros();
 				iniciar_Lista_De_Tokens();
 				iniciar_Tabela_de_Simbolos();
+				iniciar_ordem_tab();
 				
 				///Recebendo tokens
 				do {
@@ -239,7 +245,7 @@ int main (int argc, char *argv[]){
 
 				
 				imprimir_Lista_De_Erros_Lexicos(argv[i]);
-				//imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo();
+				imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo(argv[i]);
 				//imprimir_Tabela_De_Simbolos();
 				
 				printf("Os seguintes arquivos gerados:\n");
@@ -251,7 +257,8 @@ int main (int argc, char *argv[]){
 				free(caminho);
 				free(lista_de_erros.id_erro);
 				free(lista_de_tokens.id_token);
-				//FREE NA TABELA DE SIMBOLOS 1 por 1 - nao esqucer das ocorrencias
+				free(ordem_de_entrada.ordem_de_entrada_da_tab_simbolos);
+				liberar_tabela_simbolos();
 				
 				///Fechando Arquivo de entrada
 				fclose(arquivo_de_entrada);
@@ -542,7 +549,6 @@ void iniciar_Tabela_Transicoes (void){
 		for (int j = 0; j < TOTAL_CLASSES_CARACTERES; j++)
 			tabela_Transicoes[i][j] = aux[i][j];
 	
-			
 	/*printf("      b  \\n  l  d  _  \"  .  ,  ;  :  (  )  <  =  >  +  -  *  /  e  ot\n");
 	for (int i = 0; i < QUANTIDADE_DE_ESTADOS; i++){
 		printf("%3d |", i);
@@ -551,8 +557,6 @@ void iniciar_Tabela_Transicoes (void){
 		}
 		printf("\n");
 	}*/
-		
-	return ;
 }
 
 
@@ -714,17 +718,46 @@ void iniciar_Tabela_de_Simbolos(void){
 }
 
 
+void liberar_tabela_simbolos(void){
+	//Funcao para liberar memoria alocada dos itens da tabela de simbolo (incluindo o vetor de ocorrencias)
+	for(int i=0; i < TAM_TAB_HASH_SIMBOLOS; i++){
+		tSimbolo *ant, *atual;
+		ant = atual = tab_simbolos[i];
+		while (atual != NULL){
+			atual = atual->proximo;
+			free(ant->ocorrencias);
+			free(ant);
+			ant = atual;
+		}
+	}
+	free(tab_simbolos);
+}
+
+
+void iniciar_ordem_tab(void){
+	//Inicia o Mecanismo que conecta, para cada par token-lexema, a ordem em que ele ocorre na entrada e sua posição na tabela de símbolos
+	//definindo o tamanho maximo permitido para a insersao, esse tamanho maximo pode ser alterado posteriormente
+	ordem_de_entrada.tab_simb_count = 0;
+	ordem_de_entrada.limite_tab_simb_count = LIMITE_INICIAL_DE_ALOCACAO;
+	ordem_de_entrada.ordem_de_entrada_da_tab_simbolos = (tSimbolo**) malloc (ordem_de_entrada.limite_tab_simb_count * sizeof(tSimbolo*));
+	if (ordem_de_entrada.ordem_de_entrada_da_tab_simbolos == NULL){
+        printf("Erro durante a alocacao da lista de oredenacao!!! \nInfelizmente o programa travou\n");
+        exit(-1);
+    }
+}
+
+
 int hash_com_shift(void){
+	//Funcao auto explicativa
 	int h = 0;
 	for (int i = 0; i < lexema.tamanho_string; i++){
 		h += lexema.string[i];
 		h <<= 2; //shift de 2 bits na soma atual
 	}
-	return hash(h);
+	return hash(h); //Compressao do valor h obtido
 }
 
 
-/////AQUI
 void adiconar_na_tabela_de_simbolos(tToken tk){
 	int posicao = hash_com_shift();
 	tSimbolo * simb = buscar_na_tabela_de_simbolos(tk, posicao);
@@ -732,7 +765,7 @@ void adiconar_na_tabela_de_simbolos(tToken tk){
 	if(simb != NULL){ //se o token já está instalado na tab simbolos, adicionar ocorrencia
 		adiciona_ocorrencia(simb);
 	} else {
-		//Setar as coisas no novo simbolo
+		//Setar as caracteristicas do novo simbolo
 		simb = (tSimbolo *) malloc(sizeof(tSimbolo));
 		if (simb  == NULL){
 			printf("Erro durante a alocacao de um novo simbolo na tabela hash!!! \nInfelizmente o programa travou\n");
@@ -740,19 +773,39 @@ void adiconar_na_tabela_de_simbolos(tToken tk){
 		}
 		
 		simb->COD = tk;
-		simb->lexema_cadeia = lexema.string;
+
+		simb->lexema_cadeia = (char *) malloc(lexema.tamanho_string * sizeof(char));
+		strcpy(simb->lexema_cadeia, lexema.string);
+		
 		if (tk == tk_int)
 			simb->lexema_inteiro = atoi(lexema.string);
 		else if (tk == tk_dec)
 			simb->lexema_decimal = atof(lexema.string);
+			
+		simb->tamanho_ocorrencias = 0;
+		simb->limite_ocorrencias = LIMITE_INICIAL_DE_ALOCACAO;
+		simb->ocorrencias = (tPos*) malloc (simb->limite_ocorrencias * sizeof(tPos));
+		if (simb->ocorrencias == NULL){
+			printf("Erro durante a alocacao da lista de ocorrencias!!! \nInfelizmente o programa travou\n");
+			exit(-1);
+		}
+		adiciona_ocorrencia(simb);
 		
-		//adiciona ocorrencia pela 1 vez, alocar e fazer as coisas
-		//seta prx como null
-		//adicionar na tabela com Insersao no inicio
+		//Adicionar na tabela com Insersao no inicio
+		simb->proximo = tab_simbolos[posicao];
+		tab_simbolos[posicao] = simb;
 		
-		//IDEIA DE FeLIPE
-		//ordem_de_entrada[tab_simb_count] = simb;
-		//tab_simb_count++;
+		//Adicionando
+		ordem_de_entrada.ordem_de_entrada_da_tab_simbolos[ordem_de_entrada.tab_simb_count] = simb;
+		ordem_de_entrada.tab_simb_count++;
+		if (ordem_de_entrada.tab_simb_count == ordem_de_entrada.limite_tab_simb_count-1){
+			ordem_de_entrada.limite_tab_simb_count *= 2;
+			ordem_de_entrada.ordem_de_entrada_da_tab_simbolos = (tSimbolo**) realloc (ordem_de_entrada.ordem_de_entrada_da_tab_simbolos, ordem_de_entrada.limite_tab_simb_count * sizeof(tSimbolo*));
+			if (ordem_de_entrada.ordem_de_entrada_da_tab_simbolos == NULL){
+				printf("Erro durante a realocacao da lista de ordenacao!!! \nInfelizmente o programa travou\n");
+				exit(-1);
+			}
+		}
 	}
 }
 
@@ -763,13 +816,15 @@ tSimbolo * buscar_na_tabela_de_simbolos(tToken tk, int pos){
 	while (simb != NULL) {
 		if (simb->COD == tk && (strcmp(lexema.string, simb->lexema_cadeia) == 0)) {
 			return simb;
-		}	
+		}
+		simb = simb->proximo;
 	}
    	return NULL;
 }
 
 
 void adiciona_ocorrencia(tSimbolo * simb){
+	//Funcao que armazena a linha e coluna da ocorrencia de um token com lexema na tabela de simbolos
 	simb->ocorrencias[simb->tamanho_ocorrencias].LIN = linha_token;
 	simb->ocorrencias[simb->tamanho_ocorrencias].COL = coluna_token;
 	
@@ -952,4 +1007,85 @@ void imprimir_Lista_De_Erros_Lexicos(const char* nomeArquivoEntrada){
 		free(nome_arquivo);
 	}
 }
+
+
+void imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo(const char* nomeArquivo){
+	int token_max = tamanho_do_maior_nome_token_reconhecido();
+	int lexema_max = tamanho_do_maior_lexema();
+	printf("LISTA DE TOKENS RECONHECIDOS EM \"%s\" \n\n", nomeArquivo);
+	
+	printf("+-----+-----+-----+-");
+	for (int i=0; i<token_max; i++)
+		printf("-");
+	printf("-+-");
+	for (int i=0; i<lexema_max; i++)
+		printf("-");
+	printf("-+--------------+\n");
+	
+	printf("| LIN | COL | COD | TOKEN");
+	for (int i=0; i<token_max-5; i++)
+		printf(" ");
+	printf(" | LEXEMA");
+	for (int i=0; i<lexema_max-6; i++)
+		printf(" ");
+	printf(" | POS TAB SIMB |\n");
+	
+	printf("+-----+-----+-----+-");
+	for (int i=0; i<token_max; i++)
+		printf("-");
+	printf("-+-");
+	for (int i=0; i<lexema_max; i++)
+		printf("-");
+	printf("-+--------------+\n");
+	
+	
+	//AQUI
+	/*int linha_Da_Vez = 0;
+	for (int i=0; i<n; i++){
+		if (token_da_vez[i].LIN == linha_Da_Vez)
+			printf("|     | %3d | %3d | %-14s | %-16s |              |\n", token_da_vez[i].COL, token_da_vez[i].COD, token_da_vez[i].TOKEN, token_da_vez[i].LEXEMA);
+		else{
+			printf("| %3d | %3d | %3d | %-14s | %-16s |              |\n", token_da_vez[i].LIN, token_da_vez[i].COL, token_da_vez[i].COD, token_da_vez[i].TOKEN, token_da_vez[i].LEXEMA);
+			linha_Da_Vez = token_da_vez[i].LIN;
+		}
+	}*/	
+	
+	printf("+-----+-----+-----+-");
+	for (int i=0; i<token_max; i++)
+		printf("-");
+	printf("-+-");
+	for (int i=0; i<lexema_max; i++)
+		printf("-");
+	printf("-+--------------+\n");
+};
+
+
+int tamanho_do_maior_nome_token_reconhecido(void){
+	int tamanho_token[] = {6, 7, 10, 10, 9, 9, 6, 6, 6, 7, 10, 7, 5, 6, 8, 11, 5, 8, 8, 9, 4, 5, 6, 7, 10, 11, 11, 12, 8, 14, 8, 14, 12, 8, 7, 7, 8, 7, 8, 8, 11};
+	int maior = 5; //Tamanho da palavra TOKEN
+	
+	for (int i=0; i < lista_de_tokens.tamanho_lista; i++){
+		if (tamanho_token[lista_de_tokens.id_token[i].TOKEN] > maior)
+			maior = tamanho_token[lista_de_tokens.id_token[i].TOKEN];
+	}
+	return maior;
+};
+
+
+int tamanho_do_maior_lexema(void){
+	int maior = 6; //Tamanho da palavra LEXEMA
+	for (int i=0; i<ordem_de_entrada.tab_simb_count; i++){
+		int aux = strlen(ordem_de_entrada.ordem_de_entrada_da_tab_simbolos[i]->lexema_cadeia);
+		if (aux > maior)
+			maior = aux;
+	}
+	return maior;
+};
+
+
+//void imprimir_tabela_de_simbolos(void){};
+
+
+//int tamanho_da_maior_qtd_de_ocorrencias(){};
+
 
