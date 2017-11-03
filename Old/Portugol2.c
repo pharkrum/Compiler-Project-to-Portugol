@@ -13,12 +13,11 @@
 //#include "Codigo/resultados.h"
 
 
-
 #define TOTAL_CLASSES_CARACTERES 21
 #define QUANTIDADE_DE_ESTADOS 45
-#define LIMITE_INICIAL_DE_ALOCACAO 30
+#define LIMITE_INICIAL_DE_ALOCACAO 256
 #define TAM_TAB_HASH_SIMBOLOS 139
-#define hash(v) ((2*v)+3)%139 //Multiplique, Adicione e Divida (MAD)
+#define hash(v) ((2*v) + 3) mod 139 //Multiplique, Adicione e Divida (MAD)
 
 
 
@@ -101,39 +100,34 @@ typedef enum{
 
 
 
-///Definicao de Estruturas - String
+///Definicao de Estruturas - String, Lexema (int, dec e cadeia), PAR linha e coluna, Atributos da tabela de simbolos,
+///Identificador de Erros Lexicos, Lista de erros lexicos, Identificador de token, Lista de tokens
 typedef struct{
 	int tamanho_string;
 	int limite_string;
 	char * string;
 } tSring;
 
-
-
-///Tabela Hash + Definicao dos Atributos da tabela de simbolos
-//+ mecanismo que conecte, para cada par token-lexema, a ordem em que ele ocorre na entrada e sua posição na tabela de símbolos
-//Pode criar um aary lin, col, poteiro p posicao na tabela de simbolos, a unica nescessidade dele é imprimir na ordem ou fazer um sort
-typedef struct{
+typedef struct{ //nao uso ainda
 	int LIN, COL;
 } tPos;
 
-typedef struct simbolo{
+typedef struct simbolo{ //nao uso ainda
+	int ocupado;
 	tToken COD;
-	
 	char * lexema_cadeia;
 	int lexema_inteiro;
 	float lexema_decimal;
 	
-	tPos *ocorrencias;
-	int tamanho_ocorrencias;
+	tPos *ocorrencias; //ocorrencias(LIN, COL)
+	size_t tamanho_ocorrencias;
 	int limite_ocorrencias;
+	int pos_livre_em_ocorrencias;
 	
-	int ordem_de_entrada;
-	struct simbolo * proximo; //Colisao: endereçamento separado
+	//int ordem_de_entrada; //primeiro olha a ordem de entrada depois percorre as ocorrencias.
+	struct simbolo * proximo;
 } tSimbolo;
 
-
-///Definicao de Estruturas - Identificador de Erros Lexicos, Lista de erros lexicos, Identificador de token, Lista de tokens
 typedef struct{
 	int LIN, COL;
 	tErro ERRO;
@@ -160,6 +154,18 @@ typedef struct{
 
 
 
+///Tabela Hash - Definicao
+//array de ponteiros (iniciada com null)
+//tabela de simbolos HASH //combinação token–lexema (tSimblos) incluida uma única vez na tabela
+//Hash com shift % numero (primo - 139)
+//Colisao: endereçamento separado
+//Insersao no inicio
+
+//+ mecanismo que conecte, para cada par token-lexema, a ordem em que ele ocorre na entrada e sua posição na tabela de símbolos
+//Pode criar um aary lin, col, poteiro p posicao na tabela de simbolos, a unica nescessidade dele é imprimir na ordem
+//fazer o sort
+
+
 ///PROTOTIPOS
 tToken analizador_Lexico(void);
 void iniciar_Tabela_Transicoes (void);
@@ -170,24 +176,27 @@ void iniciar_Lexema(void);
 void realocar_Lexema(void);
 void reiniciar_Lexema(void);
 void inserir_Caractere_No_Lexema(char);
-int identificar_Token(void);
+int  identificar_Token(void);
 void retroceder_Ate(const int, const int, const int);
 void iniciar_Lista_De_Erros(void);
 void iniciar_Lista_De_Tokens(void);
 void adicionar_Erro_Na_Lista_De_Erros(const tErro, const char, const int, const int);
-void adicionar_Token_Na_Lista_De_Tokens(const tToken, const int, const int);
+void adicionar_Token_Na_Lista_De_Tokens(const tToken, const int, const int); //+int posisao_na_tabela_de_simbolos;
+
 const char * obter_Nome_Do_Token(tToken);
 const char * obter_Nome_Do_Erro(tErro id_token);
 int imprimir_Linha(FILE *);
 void imprimir_seta(FILE *, int n);
 void imprimir_Lista_De_Erros_Lexicos(const char*);
 //imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo();
+
+
 void iniciar_Tabela_de_Simbolos(void);
-int hash_com_shift(void);
+void adiciona_ocorrencia(tToken);
 void adiconar_na_tabela_de_simbolos(tToken);
-tSimbolo * buscar_na_tabela_de_simbolos(tToken, int);
-void adiciona_ocorrencia(tSimbolo *);
-//void imprimir_tabela_de_simbolos(void);
+tSimbolo buscar_token_na_tabela_de_simbolos(tToken);
+void imprimir_tabela_de_simbolos(void);
+char * imprimir_ocorrencias(tSimbolo);
 
 
 
@@ -198,11 +207,11 @@ int linha_arquivo = 1, coluna_arquivo = 1, linha_token, coluna_token;
 tSring lexema;
 tLista_de_erros lista_de_erros;
 tLista_de_tokens lista_de_tokens;
-tSimbolo ** tab_simbolos;
 
-//int tab_simb_count = 0;
-//tSimbolo** ordem_de_entrada_da_tab_simbolos;
-//limite
+tSimbolo *tab_simbolos;
+int tab_simb_count = 0;
+tSimbolo* ordem_de_entrada;
+
 
 
 ///FUNCAO PRINCIPAL
@@ -219,8 +228,8 @@ int main (int argc, char *argv[]){
 		/// Roda os arquivos que digitei na entrada
 		for (int i=1; i < argc; i++){ 
 			printf("\nArquivo : %s \n", argv[i]);
-			caminho = (char *) malloc(10 + strlen(argv[i])); /// Alocação para o caminho do arquivo
-			sprintf(caminho,"./Testes/%s", argv[i]); /// O arquivo está na pasta testes
+			caminho = (char *) malloc(10 + strlen(argv[i])); // Alocação para o caminho do arquivo
+			sprintf(caminho,"./Testes/%s", argv[i]); // O arquivo está na pasta testes
 			
 			if ((arquivo_de_entrada = fopen(caminho, "r")) == NULL){
 				printf("Erro ao abrir o arquivo!!! \nPor favor, verifique a existencia do mesmo na pasta 'Testes' e tente novamente.\n");
@@ -228,7 +237,6 @@ int main (int argc, char *argv[]){
 				///Iniciando listas de tokens e erros
 				iniciar_Lista_De_Erros();
 				iniciar_Lista_De_Tokens();
-				iniciar_Tabela_de_Simbolos();
 				
 				///Recebendo tokens
 				do {
@@ -251,7 +259,6 @@ int main (int argc, char *argv[]){
 				free(caminho);
 				free(lista_de_erros.id_erro);
 				free(lista_de_tokens.id_token);
-				//FREE NA TABELA DE SIMBOLOS 1 por 1 - nao esqucer das ocorrencias
 				
 				///Fechando Arquivo de entrada
 				fclose(arquivo_de_entrada);
@@ -702,7 +709,7 @@ void iniciar_Lista_De_Tokens(void){
 
 void iniciar_Tabela_de_Simbolos(void){
 	//inicia a tabela de simbolos com tamanho máximo do numero primo definido
-	tab_simbolos = (tSimbolo **) malloc(TAM_TAB_HASH_SIMBOLOS * sizeof(tSimbolo *));
+	tab_simbolos = (tSimbolo *) malloc(TAM_TAB_HASH_SIMBOLOS * sizeof(tSimbolo));
 	if (tab_simbolos == NULL) {
 		printf("Erro durante a alocacao da tabela de simbolos!!! \nInfelizmente o programa travou\n");
         exit(-1);
@@ -710,78 +717,88 @@ void iniciar_Tabela_de_Simbolos(void){
 	
 	//Inicia todas as posições desocupadas
 	for (int i = 0; i < TAM_TAB_HASH_SIMBOLOS; i++) 
-      tab_simbolos[i] = NULL; 
+      tab_simbolos[i].ocupado = 0; 
 }
 
-
-int hash_com_shift(void){
-	int h = 0;
-	for (int i = 0; i < lexema.tamanho_string; i++){
-		h += lexema.string[i];
-		h <<= 2; //shift de 2 bits na soma atual
-	}
-	return hash(h);
-}
-
-
-/////AQUI
 void adiconar_na_tabela_de_simbolos(tToken tk){
-	int posicao = hash_com_shift();
-	tSimbolo * simb = buscar_na_tabela_de_simbolos(tk, posicao);
-	
-	if(simb != NULL){ //se o token já está instalado na tab simbolos, adicionar ocorrencia
-		adiciona_ocorrencia(simb);
-	} else {
-		//Setar as coisas no novo simbolo
-		simb = (tSimbolo *) malloc(sizeof(tSimbolo));
-		if (simb  == NULL){
-			printf("Erro durante a alocacao de um novo simbolo na tabela hash!!! \nInfelizmente o programa travou\n");
-			exit(-1);
-		}
-		
-		simb->COD = tk;
-		simb->lexema_cadeia = lexema.string;
+	if(buscar_token_na_tabela_de_simbolos(tk) != NULL){ // se o token já está instalado na tab simbolos
+		adiciona_ocorrencia(tk);
+	}
+	else{ ///////////ainda não adiciona tudo que tinha que adicionar
+		int pos;
+		pos = hash((int)lexema); // a ideia é pegar a cadeia toda e converter para inteiro
+		tSimbolo simb = malloc(sizeof (tSimbolo));
+		simb.COD = tk;
+		simb.lexema_cadeia = lexema;
 		if (tk == tk_int)
-			simb->lexema_inteiro = atoi(lexema.string);
+			simb.lexema_inteiro = (int)lexema;
 		else if (tk == tk_dec)
-			simb->lexema_decimal = atof(lexema.string);
-		
-		//adiciona ocorrencia pela 1 vez, alocar e fazer as coisas
-		//seta prx como null
-		//adicionar na tabela com Insersao no inicio
-		
-		//IDEIA DE FeLIPE
-		//ordem_de_entrada[tab_simb_count] = simb;
-		//tab_simb_count++;
+			simb.lexema_decimal = (float)lexema;
+
+		tpos token_pos;
+		token_pos.LIN = linha_token;
+		token_pos.COL = coluna_token;
+
+		simb.ocorrencias = (tpos *)malloc(LIMITE_INICIAL_DE_ALOCACAO * sizeof(tPos));
+		simb.ocorrencias[0] = token_pos; //sempre é a primeira ocorrência
+		simb.tamanho_ocorrencias = 1;
+		simb.limite_ocorrencias = LIMITE_INICIAL_DE_ALOCACAO; /// fazer o realloc caso passe
+		simb.pos_livre_em_ocorrencias = 1;	
+		//simb.ordem_de_entrada = tab_simb_count;	
+		simb.proximo = tabSimbolos[pos]; //seta null
+		ordem_de_entrada[tab_simb_count] = simb;
+		tab_simb_count++; 
+		tabSimbolos[pos] = simb; //add na hash
+		//acho que tem um problema nesse sistema de próximo
 	}
 }
 
+void adiciona_ocorrencia(tToken tk){
+	tSimbolo simb;
+	simb = buscar_token_na_tabela_de_simbolos(tk);
+	tpos token_pos;
+	token_pos.LIN = linha_token;
+	token_pos.COL = coluna_token;
+	simb.ocorrencias[simb.pos_livre_em_ocorrencias] = token_pos;
 
-tSimbolo * buscar_na_tabela_de_simbolos(tToken tk, int pos){
-	//combinação token–lexema deve ser incluida uma unica vez na tabela
-	tSimbolo * simb = tab_simbolos[pos];
-	while (simb != NULL) {
-		if (simb->COD == tk && (strcmp(lexema.string, simb->lexema_cadeia) == 0)) {
+	simb.pos_livre_em_ocorrencias++;
+	simb.tamanho_ocorrencias++;
+	if(simb.tamanho_ocorrencias >= LIMITE_INICIAL_DE_ALOCACAO){
+		simb.ocorrencias = (tPos*) realloc (simb.ocorrencias, LIMITE_INICIAL_DE_ALOCACAO * sizeof(tPos)); // reveja se o limite está de acordo com o que vc pretende.
+	}
+
+}
+
+tSimbolo buscar_token_na_tabela_de_simbolos(tToken tk){ 
+	int pos;
+	tSimbolo simb;
+	pos = hash((int)lexema);
+	for (simb = tab[h]; simb != NULL; simb = simb.proximo) {
+		if (simb.COD == tk) {
 			return simb;
 		}	
 	}
    	return NULL;
 }
 
-
-void adiciona_ocorrencia(tSimbolo * simb){
-	simb->ocorrencias[simb->tamanho_ocorrencias].LIN = linha_token;
-	simb->ocorrencias[simb->tamanho_ocorrencias].COL = coluna_token;
-	
-	simb->tamanho_ocorrencias++;
-	if(simb->tamanho_ocorrencias == simb->limite_ocorrencias-1){
-		simb->limite_ocorrencias *= 2;
-		simb->ocorrencias = (tPos*) realloc (simb->ocorrencias, simb->limite_ocorrencias * sizeof(tPos));
-		if (simb->ocorrencias == NULL){
-			printf("Erro durante a realocacao da lista de ocorrencias!!! \nInfelizmente o programa travou\n");
-			exit(-1);
-		}
+/* ainda precisa ser visto como imprimir as ocorrências
+char * imprimir_ocorrencias(tSimbolo simb){
+	int i;
+	for(i = 0; i < simb.tamanho_ocorrencias; i++){
+		simb.ocorrencias[i].LIN;
+		simb.ocorrencias[i].COL;
+	}	
+}
+*/
+void imprimir_tabela_de_simbolos(void){
+	printf("TABELA DE SIMBOLOS - ");
+	int i;
+	for(i=0; i < sizeof(ordem_de_entrada); i++){
+		printf("%-25s%-20s%-10s%-10s\n", "POS", "TOKEN", "LEXEMA", "POS NA ENTRADA (linha,coluna)"); 
+    	printf("%-25s%-20s%-10s%-10s\n", i, obter_Nome_Do_Token(simb.COD), simb.lexema_cadeia, imprimir_ocorrencias(simb));
 	}
+	//ou 
+	//for(ordena a hash pela chave: tab_simb_count) NÃO SEI FAZER ORDENAÇÃO EM TABELA HASH
 }
 
 
@@ -805,18 +822,12 @@ void adicionar_Erro_Na_Lista_De_Erros(const tErro erro, const char c, const int 
 }
 
 
-void adicionar_Token_Na_Lista_De_Tokens(const tToken token, const int linha, const int coluna){
+void adicionar_Token_Na_Lista_De_Tokens(const tToken token, const int linha, const int coluna){ //+posisao_na_tabela_de_simbolos;
 	//Adicionar token
 	lista_de_tokens.id_token[lista_de_tokens.tamanho_lista].LIN = linha;
 	lista_de_tokens.id_token[lista_de_tokens.tamanho_lista].COL = coluna;
 	lista_de_tokens.id_token[lista_de_tokens.tamanho_lista].TOKEN = token;
 	lista_de_tokens.tamanho_lista++;
-	
-	//Posicao na tabela de simbolos
-	if(token == tk_INTEIRO || token == tk_DECIMAL || token == tk_CADEIA)
-		lista_de_tokens.posisao_na_tabela_de_simbolos = hash_com_shift();
-	else
-		lista_de_tokens.posisao_na_tabela_de_simbolos = -1; //Nao existe
 	
 	//Verificar tamanho da alocacao
 	if (lista_de_tokens.tamanho_lista  == lista_de_tokens.limite_lista-1){
