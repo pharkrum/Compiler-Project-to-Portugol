@@ -98,7 +98,7 @@ int linha_arquivo = 1, coluna_arquivo = 1;
 /*      PROTÓTIPOS DAS FUNÇÕES     */
 /* ------------------------------- */
 tToken analizador_Lexico(void);
-void iniciar_Tabela_Transicoes (void);
+void mostrar_Tabela_Transicoes (void);
 char ler_Proximo_Caractere(void);
 void retroceder_Caracteres(const int, const char);
 tClasse_caractere carctere_2_tClasse_caractere(const char);
@@ -329,15 +329,15 @@ tToken analizador_Lexico(void){
 }
 
 
-void iniciar_Tabela_Transicoes (void){
-	/*printf("      b  \\n  l  d  _  \"  .  ,  ;  :  (  )  <  =  >  +  -  *  /  e  ot\n");
+void mostrar_Tabela_Transicoes (void){
+	printf("      b  \\n  l  d  _  \"  .  ,  ;  :  (  )  <  =  >  +  -  *  /  e  ot\n");
 	for (int i = 0; i < QUANTIDADE_DE_ESTADOS; i++){
 		printf("%3d |", i);
 		for (int j = 0; j < TOTAL_CLASSES_CARACTERES; j++){
 			printf ("%3d", tabela_Transicoes[i][j]);
 		}
 		printf("\n");
-	}*/
+	}
 }
 
 

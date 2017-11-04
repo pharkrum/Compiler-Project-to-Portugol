@@ -5,11 +5,11 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "Codigo/lexema.h"
-#include "Codigo/tokens.h"
-#include "Codigo/automato.h"
-#include "Codigo/erros.h"
-#include "Codigo/resultados.h"
+#include "lexema.h"
+#include "tokens.h"
+#include "automato.h"
+#include "erros.h"
+#include "resultados.h"
 
 
 ///FUNCAO PRINCIPAL
