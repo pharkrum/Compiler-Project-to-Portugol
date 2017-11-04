@@ -1,0 +1,36 @@
+LISTA DE ERROS LEXICOS EM "teste-02.ptg" 
+
+[   1] // Comentário 1 
+       ---------^
+       Erro lexico na linha 1 coluna 10: Caracter Invalido 'á'
+[   2] // Comentário 2 //
+       ---------^
+       Erro lexico na linha 2 coluna 10: Caracter Invalido 'á'
+[   3] /* Comentário 3 
+[   4] /* Comentário 4 */
+[   5] (* Comentário 5 *)
+[   6] 
+[   7] início
+       --^
+       Erro lexico na linha 7 coluna 3: Caracter Invalido 'í'
+[   8]   int: x, y, z;  /* Declaração de variáveis
+[   9]   (* Esse tipo de dado é válido?? *) decimal: média;
+       -----------------------------------------------^
+       Erro lexico na linha 9 coluna 48: Caracter Invalido 'é'
+[  10]   imprima ("Digite um valor para x:");
+[  11]   leia (x);
+[  12]   imprima("Digite um valor para y:");
+[  13]   leia(y);
+[  14]   imprima ("Digite um valor para z:");
+[  15]   leia (z);
+[  16]   media <- (x+y+z)*0.33333;
+[  17]   imprima ("Média = ");
+[  18]   imprima   (média);
+       --------------^
+       Erro lexico na linha 18 coluna 15: Caracter Invalido 'é'
+[  19]   imprima    ("\n");
+[  20] fim
+[  21] 
+
+TOTAL DE ERROS: 5
+

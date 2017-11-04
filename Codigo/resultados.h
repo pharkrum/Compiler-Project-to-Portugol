@@ -73,7 +73,7 @@ void imprimir_Lista_De_Erros_Lexicos(const char* nomeArquivoEntrada){
 		while(!feof(arquivo_de_entrada)){
 			fprintf(arquivo_de_saida, "[%4d]", linha_arquivo);
 			carcteres_na_linha = imprimir_Linha(arquivo_de_saida);
-			if (lista_de_erros.id_erro[i].LIN == linha_arquivo-1){
+			if (lista_de_erros.id_erro[i].LIN == linha_arquivo-1 && i < lista_de_erros.tamanho_lista){
 				imprimir_Seta(arquivo_de_saida, lista_de_erros.id_erro[i].COL);
 				if (lista_de_erros.id_erro[i].ERRO == er_caracter_invalido)
 					fprintf(arquivo_de_saida, "       Erro lexico na linha %d coluna %d: %s '%c'\n", lista_de_erros.id_erro[i].LIN, lista_de_erros.id_erro[i].COL, obter_Nome_Do_Erro(lista_de_erros.id_erro[i].ERRO), lista_de_erros.id_erro[i].CARACTER);

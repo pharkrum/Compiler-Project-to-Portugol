@@ -1,0 +1,17 @@
+LISTA DE ERROS LEXICOS EM "teste-03.ptg" 
+
+[   1] (* teste-03.ptg *))
+[   2] 
+[   3] inicio
+[   4]   int: i, n, fat;
+[   5]   imprima ("Digite um nro: ");
+[   6]   leia (n);
+[   7]   para i de 1.0 ate n passo (2*.5)    /* Cálculo
+[   8]     fat = fat*i;                      /* do 
+[   9]   fim_para                            /* fatorial
+[  10]   imprima ("Fatorial = ");
+[  11]   imprima (fat);
+[  12] fim
+
+TOTAL DE ERROS: 0
+

@@ -1,0 +1,23 @@
+LISTA DE ERROS LEXICOS EM "Ex-02-correto.ptg" 
+
+[   1] (*           *
+[   2]  * Exemplo 2 *
+[   3]  *           *)
+[   4]  
+[   5] inicio
+[   6]   int: i, j, k;
+[   7]   dec: r;
+[   8]   para r de -2.3 ate 4.5 passo 0.2     /* Início do laço
+[   9]     k = 100*r + 10*i + j;
+[  10]     imprima ("k=");
+[  11]     imprima (k);
+[  12]     imprima ("\n");
+[  13]     j<-j-1;
+[  14]   fim_para     /* Fim do laço
+[  15] fim
+[  16] 
+[  17] 
+[  18] 
+
+TOTAL DE ERROS: 0
+

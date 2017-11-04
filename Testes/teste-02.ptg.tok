@@ -1,0 +1,26 @@
+TABELA DE SIMBOLOS - "teste-02.ptg" 
+
++-----+------------+---------------------------+-------------------------------+
+| POS | TOKEN      | LEXEMA                    | POS NA ENTRADA (linha,coluna) |
++-----+------------+---------------------------+-------------------------------+
+|  89 | tk_IDEN    | Coment                    | (  1,  4) (  2,  4)           |
+|  78 | tk_IDEN    | rio                       | (  1, 11) (  2, 11)           |
+| 117 | tk_INTEIRO | 1                         | (  1, 15)                     |
+| 125 | tk_INTEIRO | 2                         | (  2, 15)                     |
+|  73 | tk_IDEN    | in                        | (  7,  1)                     |
+| 104 | tk_IDEN    | cio                       | (  7,  4)                     |
+| 129 | tk_IDEN    | x                         | (  8,  8) ( 11,  9) ( 16, 13) |
+| 137 | tk_IDEN    | y                         | (  8, 11) ( 13,  8) ( 16, 15) |
+|   6 | tk_IDEN    | z                         | (  8, 14) ( 15,  9) ( 16, 17) |
+| 127 | tk_IDEN    | decimal                   | (  9, 38)                     |
+|  41 | tk_IDEN    | m                         | (  9, 47) ( 18, 14)           |
+| 120 | tk_IDEN    | dia                       | (  9, 49) ( 18, 16)           |
+|  54 | tk_CADEIA  | "Digite um valor para x:" | ( 10, 12)                     |
+|  65 | tk_CADEIA  | "Digite um valor para y:" | ( 12, 11)                     |
+|  76 | tk_CADEIA  | "Digite um valor para z:" | ( 14, 12)                     |
+| 122 | tk_IDEN    | media                     | ( 16,  3)                     |
+|  74 | tk_DECIMAL | 0.333330                  | ( 16, 20)                     |
+|   7 | tk_CADEIA  | "Média = "                | ( 17, 12)                     |
+|  36 | tk_CADEIA  | "\n"                      | ( 19, 15)                     |
++-----+------------+---------------------------+-------------------------------+
+
