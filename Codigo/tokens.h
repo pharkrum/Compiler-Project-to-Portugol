@@ -1,6 +1,9 @@
 /* ------------------------------------------------------------- */
+/*                      ARQUIVO: tokens.h                        */
+/*                                                               */
 /* Certifique-se que este arquivo não é incluído mais de uma vez */
 /* ------------------------------------------------------------- */
+
 #ifndef _TOKENS_H_
 #define _TOKENS_H_
 

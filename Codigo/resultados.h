@@ -1,4 +1,6 @@
 /* ------------------------------------------------------------- */
+/*                    ARQUIVO: resultados.h                      */
+/*                                                               */
 /* Certifique-se que este arquivo não é incluído mais de uma vez */
 /* ------------------------------------------------------------- */
 #ifndef _RESULTADOS_H_ 
@@ -14,6 +16,7 @@
 /* ------------------------------- */
 /*      PROTÓTIPOS DAS FUNÇÕES     */
 /* ------------------------------- */
+char reconhecer_Proximo_Simbolo(void);
 int imprimir_Linha(FILE *);
 void imprimir_Seta(FILE *, const int);
 void imprimir_Lista_De_Erros_Lexicos(const char*);
@@ -29,6 +32,13 @@ void imprimir_Tabela_De_Simbolos(const char*);
 /* ------------------------------- */
 /*    IMPLEMENTAÇÃO DAS FUNÇÕES    */
 /* ------------------------------- */
+char reconhecer_Proximo_Simbolo(void){
+	char prox_Simb = getc(arquivo_de_entrada);
+	fseek(arquivo_de_entrada, -sizeof(char), SEEK_CUR);
+	return prox_Simb;
+}
+
+
 int imprimir_Linha(FILE * arquivo_de_saida){
 	//Usada durante a impressao de erros lexicos para a entrada portugol
 	//Essa funcao é responsavel por imprimir em arquivo uma linha do aquivo texto
@@ -71,6 +81,8 @@ void imprimir_Lista_De_Erros_Lexicos(const char* nomeArquivoEntrada){
 		//Inserindo dados no arquivo
 		fprintf(arquivo_de_saida, "LISTA DE ERROS LEXICOS EM \"%s\" \n\n", nomeArquivoEntrada);
 		while(!feof(arquivo_de_entrada)){
+			if (reconhecer_Proximo_Simbolo() == EOF)
+				break;
 			fprintf(arquivo_de_saida, "[%4d]", linha_arquivo);
 			carcteres_na_linha = imprimir_Linha(arquivo_de_saida);
 			if (lista_de_erros.id_erro[i].LIN == linha_arquivo-1 && i < lista_de_erros.tamanho_lista){

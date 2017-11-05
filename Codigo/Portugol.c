@@ -1,5 +1,6 @@
-//Automato desenho: erro no estado ) -> Branco e \n
-//					erro no estado 23 -> 42 e nao para o estado 0
+/* ------------------------------------------------------------- */
+/*                     ARQUIVO: Portugol.c                       */
+/* ------------------------------------------------------------- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

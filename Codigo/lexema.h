@@ -1,4 +1,6 @@
 /* ------------------------------------------------------------- */
+/*                      ARQUIVO: lexema.h                        */
+/*                                                               */
 /* Certifique-se que este arquivo não é incluído mais de uma vez */
 /* ------------------------------------------------------------- */
 #ifndef _LEXEMA_H_

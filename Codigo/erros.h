@@ -1,4 +1,6 @@
 /* ------------------------------------------------------------- */
+/*                       ARQUIVO: erros.h                        */
+/*                                                               */
 /* Certifique-se que este arquivo não é incluído mais de uma vez */
 /* ------------------------------------------------------------- */
 #ifndef _ERROS_H_

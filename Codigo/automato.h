@@ -1,4 +1,6 @@
 /* ------------------------------------------------------------- */
+/*                     ARQUIVO: automato.h                       */
+/*                                                               */
 /* Certifique-se que este arquivo não é incluído mais de uma vez */
 /* ------------------------------------------------------------- */
 #ifndef _AUTOMATO_H_
@@ -191,7 +193,7 @@ tToken analizador_Lexico(void){
 			
 			case 13: ///Estado de erro lexico nao fechameno da cadeia (FINAL)
 				retroceder_Caracteres(1, prox_Simb);
-				adicionar_Erro_Na_Lista_De_Erros(er_cadeia_nao_fechada, prox_Simb, linha_arquivo, coluna_arquivo);
+				adicionar_Erro_Na_Lista_De_Erros(er_cadeia_nao_fechada, prox_Simb, linha_token, coluna_token);
 				adiconar_Na_Tabela_De_Simbolos(tk_CADEIA);
 				return (tk_CADEIA);
 				break;
