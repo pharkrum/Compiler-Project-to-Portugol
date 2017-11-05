@@ -1,15 +1,110 @@
-TABELA DE SIMBOLOS - "teste-03.ptg" 
+LISTA DE TOKENS RECONHECIDOS EM "teste-03.ptg" 
 
-+-----+------------+-------------------+-----------------------------------------+
-| POS | TOKEN      | LEXEMA            | POS NA ENTRADA (linha,coluna)           |
-+-----+------------+-------------------+-----------------------------------------+
-|   9 | tk_IDEN    | i                 | (  4,  8) (  7,  8) (  8, 15)           |
-|  49 | tk_IDEN    | n                 | (  4, 11) (  6,  9) (  7, 21)           |
-| 133 | tk_IDEN    | fat               | (  4, 14) (  8,  5) (  8, 11) ( 11, 12) |
-|  20 | tk_CADEIA  | "Digite um nro: " | (  5, 12)                               |
-|  69 | tk_DECIMAL | 1.00              | (  7, 13)                               |
-| 125 | tk_INTEIRO | 2                 | (  7, 30)                               |
-|  92 | tk_DECIMAL | 0.5               | (  7, 32)                               |
-|  76 | tk_CADEIA  | "Fatorial = "     | ( 10, 12)                               |
-+-----+------------+-------------------+-----------------------------------------+
++-----+-----+-----+--------------+-------------------+--------------+
+| LIN | COL | COD | TOKEN        | LEXEMA            | POS TAB SIMB |
++-----+-----+-----+--------------+-------------------+--------------+
+|   1 |  19 |  28 | tk_fecha_par |                   |              |
+|   3 |   1 |   6 | tk_inicio    |                   |              |
+|   4 |   3 |   8 | tk_int       |                   |              |
+|     |   6 |  26 | tk_dois_pts  |                   |              |
+|     |   8 |   2 | tk_IDEN      | i                 |       9      |
+|     |   9 |  24 | tk_virg      |                   |              |
+|     |  11 |   2 | tk_IDEN      | n                 |      49      |
+|     |  12 |  24 | tk_virg      |                   |              |
+|     |  14 |   2 | tk_IDEN      | fat               |     133      |
+|     |  17 |  25 | tk_pt_virg   |                   |              |
+|   5 |   3 |  11 | tk_imprima   |                   |              |
+|     |  11 |  27 | tk_abre_par  |                   |              |
+|     |  12 |   5 | tk_CADEIA    | "Digite um nro: " |      20      |
+|     |  29 |  28 | tk_fecha_par |                   |              |
+|     |  30 |  25 | tk_pt_virg   |                   |              |
+|   6 |   3 |  10 | tk_leia      |                   |              |
+|     |   8 |  27 | tk_abre_par  |                   |              |
+|     |   9 |   2 | tk_IDEN      | n                 |      49      |
+|     |  10 |  28 | tk_fecha_par |                   |              |
+|     |  11 |  25 | tk_pt_virg   |                   |              |
+|   7 |   3 |  12 | tk_para      |                   |              |
+|     |   8 |   2 | tk_IDEN      | i                 |       9      |
+|     |  10 |  13 | tk_de        |                   |              |
+|     |  13 |   4 | tk_DECIMAL   | 1.0               |      69      |
+|     |  17 |  14 | tk_ate       |                   |              |
+|     |  21 |   2 | tk_IDEN      | n                 |      49      |
+|     |  23 |  15 | tk_passo     |                   |              |
+|     |  29 |  27 | tk_abre_par  |                   |              |
+|     |  30 |   3 | tk_INTEIRO   | 2                 |     125      |
+|     |  31 |  40 | tk_vezes     |                   |              |
+|     |  32 |   4 | tk_DECIMAL   | 0.5               |      92      |
+|     |  34 |  28 | tk_fecha_par |                   |              |
+|   8 |   5 |   2 | tk_IDEN      | fat               |     133      |
+|     |   9 |  34 | tk_igual     |                   |              |
+|     |  11 |   2 | tk_IDEN      | fat               |     133      |
+|     |  14 |  40 | tk_vezes     |                   |              |
+|     |  15 |   2 | tk_IDEN      | i                 |       9      |
+|     |  16 |  25 | tk_pt_virg   |                   |              |
+|   9 |   3 |  16 | tk_fim_para  |                   |              |
+|  10 |   3 |  11 | tk_imprima   |                   |              |
+|     |  11 |  27 | tk_abre_par  |                   |              |
+|     |  12 |   5 | tk_CADEIA    | "Fatorial = "     |      76      |
+|     |  25 |  28 | tk_fecha_par |                   |              |
+|     |  26 |  25 | tk_pt_virg   |                   |              |
+|  11 |   3 |  11 | tk_imprima   |                   |              |
+|     |  11 |  27 | tk_abre_par  |                   |              |
+|     |  12 |   2 | tk_IDEN      | fat               |     133      |
+|     |  15 |  28 | tk_fecha_par |                   |              |
+|     |  16 |  25 | tk_pt_virg   |                   |              |
+|  12 |   1 |   7 | tk_fim       |                   |              |
+|     |   3 |   1 | tk_EOF       |                   |              |
++-----+-----+-----+--------------+-------------------+--------------+
+
+RESUMO 
+
++-----+----------------+------+
+| COD | TOKEN          | USOS |
++-----+----------------+------+
+|   1 | tk_EOF         |    1 |
+|   2 | tk_IDEN        |   10 |
+|   3 | tk_INTEIRO     |    1 |
+|   4 | tk_DECIMAL     |    2 |
+|   5 | tk_CADEIA      |    2 |
+|   6 | tk_inicio      |    1 |
+|   7 | tk_fim         |    1 |
+|   8 | tk_int         |    1 |
+|   9 | tk_dec         |    0 |
+|  10 | tk_leia        |    1 |
+|  11 | tk_imprima     |    3 |
+|  12 | tk_para        |    1 |
+|  13 | tk_de          |    1 |
+|  14 | tk_ate         |    1 |
+|  15 | tk_passo       |    1 |
+|  16 | tk_fim_para    |    1 |
+|  17 | tk_se          |    0 |
+|  18 | tk_entao       |    0 |
+|  19 | tk_senao       |    0 |
+|  20 | tk_fim_se      |    0 |
+|  21 | tk_e           |    0 |
+|  22 | tk_ou          |    0 |
+|  23 | tk_nao         |    0 |
+|  24 | tk_virg        |    2 |
+|  25 | tk_pt_virg     |    6 |
+|  26 | tk_dois_pts    |    1 |
+|  27 | tk_abre_par    |    5 |
+|  28 | tk_fecha_par   |    6 |
+|  29 | tk_menor       |    0 |
+|  30 | tk_menor_igual |    0 |
+|  31 | tk_maior       |    0 |
+|  32 | tk_maior_igual |    0 |
+|  33 | tk_diferente   |    0 |
+|  34 | tk_igual       |    1 |
+|  35 | tk_incr        |    0 |
+|  36 | tk_decr        |    0 |
+|  37 | tk_atrib       |    0 |
+|  38 | tk_mais        |    0 |
+|  39 | tk_menos       |    0 |
+|  40 | tk_vezes       |    2 |
+|  41 | tk_dividido    |    0 |
++-----+----------------+------+
+|   0 | TOTAL          |   51 |
++-----+----------------+------+
+
+TOTAL DE ERROS: 0
 

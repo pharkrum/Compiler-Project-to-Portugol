@@ -20,7 +20,7 @@ char reconhecer_Proximo_Simbolo(void);
 int imprimir_Linha(FILE *);
 void imprimir_Seta(FILE *, const int);
 void imprimir_Lista_De_Erros_Lexicos(const char*);
-const char * procurar_Lexema(const tIndentificador_De_Token meuToken);
+tSimbolo * procurar_Lexema(const tIndentificador_De_Token meuToken);
 void imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo(const char*, int);
 int obter_Tamanho_Do_Maior_Nome_Token_Reconhecido(void);
 int obter_Tamanho_Do_Maior_Lexema(void);
@@ -105,18 +105,18 @@ void imprimir_Lista_De_Erros_Lexicos(const char* nomeArquivoEntrada){
 }
 
 
-const char * procurar_Lexema(const tIndentificador_De_Token meuToken){
+tSimbolo * procurar_Lexema(const tIndentificador_De_Token meuToken){
 	tSimbolo * simb = tab_simbolos[meuToken.posisao_na_tabela_de_simbolos];
 	while (simb != NULL) {
 		if (simb->COD == meuToken.TOKEN) {
 			for(int i=0; i < simb->tamanho_ocorrencias; i++){
 				if (simb->ocorrencias[i].LIN == meuToken.LIN && simb->ocorrencias[i].COL == meuToken.COL)
-					return simb->lexema_cadeia;
+					return simb;
 			}
 		}
 		simb = simb->proximo;
 	}
-   	return " ";
+   	return NULL;
 }
 
 
@@ -130,7 +130,7 @@ void imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo(const char* nomeArquivoEntra
 	char * nome_arquivo;
 	
 	nome_arquivo = (char *) malloc(4 + strlen(nomeArquivoEntrada)); // Alocação para o nome do arquivo
-	sprintf(nome_arquivo,"%s.tbl", nomeArquivoEntrada); // O arquivo esta na pasta testes
+	sprintf(nome_arquivo,"%s.tok", nomeArquivoEntrada); // O arquivo esta na pasta testes
 	
 	if ((arquivo_de_saida = fopen(nome_arquivo, "w")) == NULL){
 		//Erro ao abrir o arquivo
@@ -171,7 +171,23 @@ void imprimir_Lista_De_Tokens_Reconhecidos_E_Resumo(const char* nomeArquivoEntra
 			if (lista_de_tokens.id_token[i].posisao_na_tabela_de_simbolos == -1){
 				fprintf(arquivo_de_saida,"%-*s |              |\n", lexema_max, " ");
 			} else{
-				fprintf(arquivo_de_saida,"%-*s |     %3d      |\n", lexema_max, procurar_Lexema(lista_de_tokens.id_token[i]), lista_de_tokens.id_token[i].posisao_na_tabela_de_simbolos);
+				tSimbolo * simb = procurar_Lexema(lista_de_tokens.id_token[i]);
+				
+				if (simb->COD == tk_INTEIRO){
+					fprintf(arquivo_de_saida,"%-*d |     %3d      |\n", lexema_max, simb->lexema_inteiro, lista_de_tokens.id_token[i].posisao_na_tabela_de_simbolos);
+				}else if(simb->COD == tk_DECIMAL){
+					int aux = strlen(simb->lexema_cadeia);
+					int qtd_apos = 1, qtd_antes = 0;
+					for (int j=0; j<aux; j++){
+						qtd_antes++; if (simb->lexema_cadeia[j]=='.') break;
+					}
+					qtd_apos = aux - qtd_antes;
+					if (qtd_apos == 0) qtd_apos++;
+					if (qtd_apos >= lexema_max-1) qtd_apos--;
+					fprintf(arquivo_de_saida,"%-*.*f |     %3d      |\n", lexema_max, qtd_apos, simb->lexema_decimal, lista_de_tokens.id_token[i].posisao_na_tabela_de_simbolos);
+				}else{
+					fprintf(arquivo_de_saida,"%-*s |     %3d      |\n", lexema_max,  simb->lexema_cadeia, lista_de_tokens.id_token[i].posisao_na_tabela_de_simbolos);
+				}
 			}
 			
 			if (lista_de_tokens.id_token[i].LIN != linha_Da_Vez)
@@ -261,7 +277,7 @@ void imprimir_Tabela_De_Simbolos(const char* nomeArquivoEntrada){
 	char * nome_arquivo;
 	
 	nome_arquivo = (char *) malloc(4 + strlen(nomeArquivoEntrada)); // Alocação para o nome do arquivo
-	sprintf(nome_arquivo,"%s.tok", nomeArquivoEntrada); // O arquivo esta na pasta testes
+	sprintf(nome_arquivo,"%s.tbl", nomeArquivoEntrada); // O arquivo esta na pasta testes
 	
 	if ((arquivo_de_saida = fopen(nome_arquivo, "w")) == NULL){
 		//Erro ao abrir o arquivo
@@ -299,8 +315,15 @@ void imprimir_Tabela_De_Simbolos(const char* nomeArquivoEntrada){
 			if (ordem_de_entrada.ordem_de_entrada_da_tab_simbolos[i]->COD == tk_INTEIRO){
 				fprintf(arquivo_de_saida,"%-*d", lexema_max, ordem_de_entrada.ordem_de_entrada_da_tab_simbolos[i]->lexema_inteiro);
 			}else if(ordem_de_entrada.ordem_de_entrada_da_tab_simbolos[i]->COD == tk_DECIMAL){
-				int aux = strlen(ordem_de_entrada.ordem_de_entrada_da_tab_simbolos[i]->lexema_cadeia)-1;
-				fprintf(arquivo_de_saida,"%-*.*f", lexema_max, aux, ordem_de_entrada.ordem_de_entrada_da_tab_simbolos[i]->lexema_decimal);
+				int aux = strlen(ordem_de_entrada.ordem_de_entrada_da_tab_simbolos[i]->lexema_cadeia);
+				int qtd_apos = 1, qtd_antes = 0;
+				for (int j=0; j<aux; j++){
+					qtd_antes++; if (ordem_de_entrada.ordem_de_entrada_da_tab_simbolos[i]->lexema_cadeia[j]=='.') break;
+				}
+				qtd_apos = aux - qtd_antes;
+				if (qtd_apos == 0) qtd_apos++;
+				
+				fprintf(arquivo_de_saida,"%-*.*f", lexema_max, qtd_apos, ordem_de_entrada.ordem_de_entrada_da_tab_simbolos[i]->lexema_decimal);
 			}else{
 				fprintf(arquivo_de_saida,"%-*s", lexema_max, ordem_de_entrada.ordem_de_entrada_da_tab_simbolos[i]->lexema_cadeia);
 			}

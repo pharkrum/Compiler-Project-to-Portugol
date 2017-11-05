@@ -292,6 +292,7 @@ void iniciar_Ordem_Tab(void){
 int hash_Com_Shift(void){
 	//Funcao HASH com shift: após ela é realizada a compressao (o valor deve ser positivo pois rdefinirar o indice do Hash)
 	int h = 0;
+	
 	for (int i = 0; i < lexema.tamanho_string; i++){
 		h += lexema.string[i];
 		h <<= 2; //shift de 2 bits na soma atual

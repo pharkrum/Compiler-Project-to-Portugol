@@ -1,26 +1,146 @@
-TABELA DE SIMBOLOS - "teste-02.ptg" 
+LISTA DE TOKENS RECONHECIDOS EM "teste-02.ptg" 
 
-+-----+------------+---------------------------+-------------------------------+
-| POS | TOKEN      | LEXEMA                    | POS NA ENTRADA (linha,coluna) |
-+-----+------------+---------------------------+-------------------------------+
-|  89 | tk_IDEN    | Coment                    | (  1,  4) (  2,  4)           |
-|  78 | tk_IDEN    | rio                       | (  1, 11) (  2, 11)           |
-| 117 | tk_INTEIRO | 1                         | (  1, 15)                     |
-| 125 | tk_INTEIRO | 2                         | (  2, 15)                     |
-|  73 | tk_IDEN    | in                        | (  7,  1)                     |
-| 104 | tk_IDEN    | cio                       | (  7,  4)                     |
-| 129 | tk_IDEN    | x                         | (  8,  8) ( 11,  9) ( 16, 13) |
-| 137 | tk_IDEN    | y                         | (  8, 11) ( 13,  8) ( 16, 15) |
-|   6 | tk_IDEN    | z                         | (  8, 14) ( 15,  9) ( 16, 17) |
-| 127 | tk_IDEN    | decimal                   | (  9, 38)                     |
-|  41 | tk_IDEN    | m                         | (  9, 47) ( 18, 14)           |
-| 120 | tk_IDEN    | dia                       | (  9, 49) ( 18, 16)           |
-|  54 | tk_CADEIA  | "Digite um valor para x:" | ( 10, 12)                     |
-|  65 | tk_CADEIA  | "Digite um valor para y:" | ( 12, 11)                     |
-|  76 | tk_CADEIA  | "Digite um valor para z:" | ( 14, 12)                     |
-| 122 | tk_IDEN    | media                     | ( 16,  3)                     |
-|  74 | tk_DECIMAL | 0.333330                  | ( 16, 20)                     |
-|   7 | tk_CADEIA  | "Média = "                | ( 17, 12)                     |
-|  36 | tk_CADEIA  | "\n"                      | ( 19, 15)                     |
-+-----+------------+---------------------------+-------------------------------+
++-----+-----+-----+--------------+---------------------------+--------------+
+| LIN | COL | COD | TOKEN        | LEXEMA                    | POS TAB SIMB |
++-----+-----+-----+--------------+---------------------------+--------------+
+|   1 |   1 |  41 | tk_dividido  |                           |              |
+|     |   2 |  41 | tk_dividido  |                           |              |
+|     |   4 |   2 | tk_IDEN      | Coment                    |      89      |
+|     |  11 |   2 | tk_IDEN      | rio                       |      78      |
+|     |  15 |   3 | tk_INTEIRO   | 1                         |     117      |
+|   2 |   1 |  41 | tk_dividido  |                           |              |
+|     |   2 |  41 | tk_dividido  |                           |              |
+|     |   4 |   2 | tk_IDEN      | Coment                    |      89      |
+|     |  11 |   2 | tk_IDEN      | rio                       |      78      |
+|     |  15 |   3 | tk_INTEIRO   | 2                         |     125      |
+|     |  17 |  41 | tk_dividido  |                           |              |
+|     |  18 |  41 | tk_dividido  |                           |              |
+|   7 |   1 |   2 | tk_IDEN      | in                        |      73      |
+|     |   4 |   2 | tk_IDEN      | cio                       |     104      |
+|   8 |   3 |   8 | tk_int       |                           |              |
+|     |   6 |  26 | tk_dois_pts  |                           |              |
+|     |   8 |   2 | tk_IDEN      | x                         |     129      |
+|     |   9 |  24 | tk_virg      |                           |              |
+|     |  11 |   2 | tk_IDEN      | y                         |     137      |
+|     |  12 |  24 | tk_virg      |                           |              |
+|     |  14 |   2 | tk_IDEN      | z                         |       6      |
+|     |  15 |  25 | tk_pt_virg   |                           |              |
+|   9 |  38 |   2 | tk_IDEN      | decimal                   |     127      |
+|     |  45 |  26 | tk_dois_pts  |                           |              |
+|     |  47 |   2 | tk_IDEN      | m                         |      41      |
+|     |  49 |   2 | tk_IDEN      | dia                       |     120      |
+|     |  52 |  25 | tk_pt_virg   |                           |              |
+|  10 |   3 |  11 | tk_imprima   |                           |              |
+|     |  11 |  27 | tk_abre_par  |                           |              |
+|     |  12 |   5 | tk_CADEIA    | "Digite um valor para x:" |      54      |
+|     |  37 |  28 | tk_fecha_par |                           |              |
+|     |  38 |  25 | tk_pt_virg   |                           |              |
+|  11 |   3 |  10 | tk_leia      |                           |              |
+|     |   8 |  27 | tk_abre_par  |                           |              |
+|     |   9 |   2 | tk_IDEN      | x                         |     129      |
+|     |  10 |  28 | tk_fecha_par |                           |              |
+|     |  11 |  25 | tk_pt_virg   |                           |              |
+|  12 |   3 |  11 | tk_imprima   |                           |              |
+|     |  10 |  27 | tk_abre_par  |                           |              |
+|     |  11 |   5 | tk_CADEIA    | "Digite um valor para y:" |      65      |
+|     |  36 |  28 | tk_fecha_par |                           |              |
+|     |  37 |  25 | tk_pt_virg   |                           |              |
+|  13 |   3 |  10 | tk_leia      |                           |              |
+|     |   7 |  27 | tk_abre_par  |                           |              |
+|     |   8 |   2 | tk_IDEN      | y                         |     137      |
+|     |   9 |  28 | tk_fecha_par |                           |              |
+|     |  10 |  25 | tk_pt_virg   |                           |              |
+|  14 |   3 |  11 | tk_imprima   |                           |              |
+|     |  11 |  27 | tk_abre_par  |                           |              |
+|     |  12 |   5 | tk_CADEIA    | "Digite um valor para z:" |      76      |
+|     |  37 |  28 | tk_fecha_par |                           |              |
+|     |  38 |  25 | tk_pt_virg   |                           |              |
+|  15 |   3 |  10 | tk_leia      |                           |              |
+|     |   8 |  27 | tk_abre_par  |                           |              |
+|     |   9 |   2 | tk_IDEN      | z                         |       6      |
+|     |  10 |  28 | tk_fecha_par |                           |              |
+|     |  11 |  25 | tk_pt_virg   |                           |              |
+|  16 |   3 |   2 | tk_IDEN      | media                     |     122      |
+|     |   9 |  37 | tk_atrib     |                           |              |
+|     |  12 |  27 | tk_abre_par  |                           |              |
+|     |  13 |   2 | tk_IDEN      | x                         |     129      |
+|     |  14 |  38 | tk_mais      |                           |              |
+|     |  15 |   2 | tk_IDEN      | y                         |     137      |
+|     |  16 |  38 | tk_mais      |                           |              |
+|     |  17 |   2 | tk_IDEN      | z                         |       6      |
+|     |  18 |  28 | tk_fecha_par |                           |              |
+|     |  19 |  40 | tk_vezes     |                           |              |
+|     |  20 |   4 | tk_DECIMAL   | 0.33333                   |      74      |
+|     |  27 |  25 | tk_pt_virg   |                           |              |
+|  17 |   3 |  11 | tk_imprima   |                           |              |
+|     |  11 |  27 | tk_abre_par  |                           |              |
+|     |  12 |   5 | tk_CADEIA    | "Média = "                |       7      |
+|     |  22 |  28 | tk_fecha_par |                           |              |
+|     |  23 |  25 | tk_pt_virg   |                           |              |
+|  18 |   3 |  11 | tk_imprima   |                           |              |
+|     |  13 |  27 | tk_abre_par  |                           |              |
+|     |  14 |   2 | tk_IDEN      | m                         |      41      |
+|     |  16 |   2 | tk_IDEN      | dia                       |     120      |
+|     |  19 |  28 | tk_fecha_par |                           |              |
+|     |  20 |  25 | tk_pt_virg   |                           |              |
+|  19 |   3 |  11 | tk_imprima   |                           |              |
+|     |  14 |  27 | tk_abre_par  |                           |              |
+|     |  15 |   5 | tk_CADEIA    | "\n"                      |      36      |
+|     |  19 |  28 | tk_fecha_par |                           |              |
+|     |  20 |  25 | tk_pt_virg   |                           |              |
+|  20 |   1 |   7 | tk_fim       |                           |              |
+|  21 |   0 |   1 | tk_EOF       |                           |              |
++-----+-----+-----+--------------+---------------------------+--------------+
+
+RESUMO 
+
++-----+----------------+------+
+| COD | TOKEN          | USOS |
++-----+----------------+------+
+|   1 | tk_EOF         |    1 |
+|   2 | tk_IDEN        |   21 |
+|   3 | tk_INTEIRO     |    2 |
+|   4 | tk_DECIMAL     |    1 |
+|   5 | tk_CADEIA      |    5 |
+|   6 | tk_inicio      |    0 |
+|   7 | tk_fim         |    1 |
+|   8 | tk_int         |    1 |
+|   9 | tk_dec         |    0 |
+|  10 | tk_leia        |    3 |
+|  11 | tk_imprima     |    6 |
+|  12 | tk_para        |    0 |
+|  13 | tk_de          |    0 |
+|  14 | tk_ate         |    0 |
+|  15 | tk_passo       |    0 |
+|  16 | tk_fim_para    |    0 |
+|  17 | tk_se          |    0 |
+|  18 | tk_entao       |    0 |
+|  19 | tk_senao       |    0 |
+|  20 | tk_fim_se      |    0 |
+|  21 | tk_e           |    0 |
+|  22 | tk_ou          |    0 |
+|  23 | tk_nao         |    0 |
+|  24 | tk_virg        |    2 |
+|  25 | tk_pt_virg     |   12 |
+|  26 | tk_dois_pts    |    2 |
+|  27 | tk_abre_par    |   10 |
+|  28 | tk_fecha_par   |   10 |
+|  29 | tk_menor       |    0 |
+|  30 | tk_menor_igual |    0 |
+|  31 | tk_maior       |    0 |
+|  32 | tk_maior_igual |    0 |
+|  33 | tk_diferente   |    0 |
+|  34 | tk_igual       |    0 |
+|  35 | tk_incr        |    0 |
+|  36 | tk_decr        |    0 |
+|  37 | tk_atrib       |    1 |
+|  38 | tk_mais        |    2 |
+|  39 | tk_menos       |    0 |
+|  40 | tk_vezes       |    1 |
+|  41 | tk_dividido    |    6 |
++-----+----------------+------+
+|   0 | TOTAL          |   87 |
++-----+----------------+------+
+
+TOTAL DE ERROS: 5
 
