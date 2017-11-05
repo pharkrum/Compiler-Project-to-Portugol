@@ -1,2 +1,0 @@
-//Automato desenho: erro no estado 0 -> Branco e \n
-//		    		erro no estado 23 -> 42 e nao para o estado 0
