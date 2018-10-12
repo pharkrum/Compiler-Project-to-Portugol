@@ -35,7 +35,7 @@ OpUnario → - | ++ | -- | nao<br>
 Número → Inteiro<br>
 | Decimal<br>
 ## Automato
-
+![alt text](https://github.com/pharkrum/Compiler-Project-to-Portugol/automato/automato.jpg "Automato")
 ## Transition Table
 
 ## Input
