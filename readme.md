@@ -18,7 +18,7 @@ CMD-Obtenha → **leia** **(** Identificador **)** **;**<br>
 CMD-Mostre → **imprima** **(** Identificador **)** **;** | **imprima** ( Número )**;** | **imprima** ( Cadeia ) **;**<br>
 CMD-Atrib → Identificador **<-** Expr **;**<br>
 Expr → Expr OpBinario Expr | OpUnario Expr | Número<br>
-OpBinario → **+** | **-** |  *****  | **/** | **e** | **ou** | **=** | **<>** | **>** | **>=** | **<** | **<=**<br>
+OpBinario → **+** | **-** |  **\***  | **/** | **e** | **ou** | **=** | **<>** | **>** | **>=** | **<** | **<=**<br>
 OpUnario → **-** | **++** | **--** | **nao**<br>
 Número → Inteiro | Decimal<br>
 ## Automato
