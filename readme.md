@@ -1,15 +1,13 @@
 # Lexical analyzer in compiler project for Portugol language
 
-## About
-
-### Portugol 
+## Portugol 
 Portugol is a pseudolanguage that allows 
 the reader to develop algorithms structured in Portuguese in a simple and intuitive way, regardless of programming language.
 [See in Wikipedia(PT)](https://pt.wikipedia.org/wiki/Portugol)
 ## Grammar
 Programa → inicio Declarações Comandos fim <br>
 Declarações → Declaração Declarações<br>
-| ε<br>
+            | ε<br>
 Declaração → Tipo : Identificadores ;<br>
 Tipo → int<br>
 | dec<br>
@@ -39,6 +37,5 @@ Número → Inteiro<br>
 ## Transition Table
 ![alt text](https://github.com/pharkrum/Compiler-Project-to-Portugol/blob/master/Automato/transitionTable.png "Transitions")
 
-## Input
+## Input and output
 
-## Output
