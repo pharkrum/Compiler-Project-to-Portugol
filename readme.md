@@ -37,6 +37,7 @@ Número → Inteiro<br>
 ## Automato
 ![alt text](https://github.com/pharkrum/Compiler-Project-to-Portugol/blob/master/Automato/automato.jpg "Automato")
 ## Transition Table
+![alt text](https://github.com/pharkrum/Compiler-Project-to-Portugol/blob/master/Automato/transitionTable.png "Transitions")
 
 ## Input
 
