@@ -27,4 +27,5 @@ Número → Inteiro | Decimal<br>
 ![alt text](https://github.com/pharkrum/Compiler-Project-to-Portugol/blob/master/Automato/transitionTable.png "Transitions")
 
 ## Input and output
-https://github.com/pharkrum/Compiler-Project-to-Portugol/blob/master/Arquivos/Portugol-Relatorio.doc
+https://github.com/pharkrum/Compiler-Project-to-Portugol/blob/master/Arquivos/Portugol-Relatorio.pdf
+
